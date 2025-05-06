@@ -9,6 +9,14 @@ export async function CashOnDeliveryOrderController(request,response){
     try {
         const userId = request.userId // auth middleware 
         const { list_items, totalAmt, addressId,subTotalAmt } = request.body 
+        console.log("list_items",addressId)
+        if(!addressId){
+            return response.status(400).json({
+                message : "Provide address",  
+                error : true,
+                success : false
+            })
+        }
 
         for (const item of list_items) {
             const productExists = await ProductModel.findByPk(item.product.id);
@@ -123,6 +131,14 @@ export async function paymentController(request,response){
         const userId = request.userId // auth middleware 
         const { list_items, totalAmt, addressId,subTotalAmt } = request.body 
 
+        if(!addressId){
+            return response.status(400).json({
+                message : "Provide address",  
+                error : true,
+                success : false
+            })
+        }
+
         const user = await UserModel.findByPk(userId)
 
         const line_items  = list_items.map(item =>{
@@ -165,7 +181,6 @@ export async function paymentController(request,response){
         }
 
         const session = await Stripe.checkout.sessions.create(params)
-        console.log("session",session)
 
         return response.status(200).json(session)
 
