@@ -11,6 +11,7 @@ import Profile from "../pages/Profile";
 import MyOrders from "../pages/MyOrders";
 import ProductDisplayPage from "../pages/ProductDisplayPage";
 import Address from "../pages/Address";
+import ProductListPage from "../pages/ProductListPage";
 
 const router = createBrowserRouter([
     {
@@ -62,6 +63,15 @@ const router = createBrowserRouter([
             {
                 path : "product/:product",
                 element : <ProductDisplayPage/>
+            },
+            {
+                path : ":category",
+                children : [
+                    {
+                        path : ":subCategory",
+                        element : <ProductListPage/>
+                    }
+                ]
             },
 
         

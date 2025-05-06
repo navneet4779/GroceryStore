@@ -137,3 +137,70 @@ export const getProductByCategory = async(request,response)=>{
         });
     }
 };
+
+export const getProductByCategoryAndSubCategory = async (request, response) => {
+    try {
+        let { categoryId, subCategoryId, page, limit } = request.body;
+
+        // Validate required fields
+        if (!categoryId || !subCategoryId) {
+            return response.status(400).json({
+                message: "Provide categoryId and subCategoryId",
+                error: true,
+                success: false,
+            });
+        }
+
+        // Set default values for pagination
+        page = page || 1;
+        limit = limit || 10;
+
+        // Calculate the offset for pagination
+        const offset = (page - 1) * limit;
+
+        // Fetch products by category and sub-category using Sequelize
+        const [data, dataCount] = await Promise.all([
+            ProductModel.findAll({
+                where: {
+                    categoryId: categoryId, // Match categoryId
+                    subCategoryId: subCategoryId, // Match subCategoryId
+                },
+                include: [
+                    { model: CategoryModel, as: "category" }, // Include category details
+                    { model: SubCategoryModel, as: "subCategory" }, // Include sub-category details
+                ],
+                order: [["createdAt", "DESC"]], // Sort by createdAt in descending order
+                limit: parseInt(limit), // Limit the number of results
+                offset: parseInt(offset), // Skip results for pagination
+                logging: console.log, // Log the SQL query for this operation
+            }),
+            ProductModel.count({
+                where: {
+                    categoryId: categoryId,
+                    subCategoryId: subCategoryId,
+                },
+            }),
+        ]);
+
+
+
+        // Return the response
+        return response.json({
+            message: "Product list",
+            data: data,
+            totalCount: dataCount,
+            totalPage: Math.ceil(dataCount / limit),
+            page: page,
+            limit: limit,
+            success: true,
+            error: false,
+        });
+    } catch (error) {
+        console.error("Error in getProductByCategoryAndSubCategory:", error.message);
+        return response.status(500).json({
+            message: error.message || "Internal Server Error",
+            error: true,
+            success: false,
+        });
+    }
+};

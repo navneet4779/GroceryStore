@@ -7,6 +7,7 @@ import { useState } from 'react'
 import AddToCartButton from './AddToCartButton'
 
 const CardProduct = ({data}) => {
+    console.error("CardProduct data",data.stock)
     const url = `/product/${valideURLConvert(data.name)}-${data.id}`
     const [loading,setLoading] = useState(false)
   
@@ -48,7 +49,7 @@ const CardProduct = ({data}) => {
         </div>
         <div className=''>
           {
-            data.stock == 0 ? (
+            data.stock <= 0 ? (
               <p className='text-red-500 text-sm text-center'>Out of stock</p>
             ) : (
               <AddToCartButton data={data} />

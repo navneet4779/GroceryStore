@@ -159,7 +159,7 @@ const ProductDisplayPage = () => {
           </div>
         </div>
 
-        {data.stock === 0 ? (
+        {data.stock <= 0 ? (
           <p className="text-red-500 text-lg font-semibold">Out of Stock</p>
         ) : (
           <AddToCartButton data={data} />

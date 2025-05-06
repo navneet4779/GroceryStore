@@ -1,77 +1,33 @@
-import React from 'react'
-import banner from '../assets/banner.jpg'
-import bannerMobile from '../assets/banner-mobile.jpg'
-import { useSelector } from 'react-redux'
-import { valideURLConvert } from '../utils/valideURLConvert'
-import {Link, useNavigate} from 'react-router-dom'
-import CategoryWiseProductDisplay from '../components/CategoryWiseProductDisplay'
+import React from 'react';
+import banner from '../assets/banner.jpg';
+import bannerMobile from '../assets/banner-mobile.jpg';
+import { useSelector } from 'react-redux';
+import { valideURLConvert } from '../utils/valideURLConvert';
+import { useNavigate } from 'react-router-dom';
+import CategoryWiseProductDisplay from '../components/CategoryWiseProductDisplay';
 
 const Home = () => {
-  const loadingCategory = useSelector(state => state.product.loadingCategory)
-  const categoryData = useSelector(state => state.product.allCategory)
-  const subCategoryData = useSelector(state => state.product.allSubCategory)
-  const navigate = useNavigate()
-  const handleRedirectProductListpage = (id,cat)=>{
-      const subcategory = subCategoryData.find(sub => sub.category?.id === id);
-      if (!subcategory) {
-          console.error("No subcategory found for category ID:", id);
-          return "/";
-      }
-      const url = `/${valideURLConvert(cat)}-${id}/${valideURLConvert(subcategory.name)}-${subcategory.id}`
+  const loadingCategory = useSelector((state) => state.product.loadingCategory);
+  const categoryData = useSelector((state) => state.product.allCategory);
+  const subCategoryData = useSelector((state) => state.product.allSubCategory);
+  const navigate = useNavigate();
 
-      navigate(url)
-      console.log(url)
-  }
-
+  const handleRedirectProductListpage = (categoryId, subCategoryId, categoryName, subCategoryName) => {
+    const url = `/${valideURLConvert(categoryName)}-${categoryId}/${valideURLConvert(subCategoryName)}-${subCategoryId}`;
+    navigate(url);
+  };
 
   return (
-   <section className='bg-white'>
-      <div className='container mx-auto'>
-          <div className={`w-full h-full min-h-48 bg-blue-100 rounded ${!banner && "animate-pulse my-2" } `}>
-              <img
-                src={banner}
-                className='w-full h-full hidden lg:block'
-                alt='banner' 
-              />
-              <img
-                src={bannerMobile}
-                className='w-full h-full lg:hidden'
-                alt='banner' 
-              />
-          </div>
-      </div>
-      
-      <div className='container mx-auto px-4 my-2 grid grid-cols-5 md:grid-cols-8 lg:grid-cols-10  gap-2'>
-          {
-            loadingCategory ? (
-              new Array(12).fill(null).map((c,index)=>{
-                return(
-                  <div key={index+"loadingcategory"} className='bg-white rounded p-4 min-h-36 grid gap-2 shadow animate-pulse'>
-                    <div className='bg-blue-100 min-h-24 rounded'></div>
-                    <div className='bg-blue-100 h-8 rounded'></div>
-                  </div>
-                )
-              })
-            ) : (
-              categoryData.map((cat,index)=>{
-                return(
-                  <div key={cat.id+"displayCategory"} className='w-full h-full' onClick={()=>handleRedirectProductListpage(cat.id,cat.name)}>
-                    <div>
-                        <img 
-                          src='https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.swiggy.com%2Finstamart%2Fp%2Famul-gold-pasteurised-full-cream-milk-TYF3262KU8&psig=AOvVaw2oYbqTrzpreItJKY7p9upG&ust=1746027046667000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOD78ODH_YwDFQAAAAAdAAAAABAE'
-                          className='w-full h-full object-scale-down'
-                        />
-                    </div>
-                  </div>
-                )
-              })
-              
-            )
-          }
+    <section className="bg-white">
+      <div className="container mx-auto">
+        <div className={`w-full h-full min-h-48 bg-blue-100 rounded ${!banner && 'animate-pulse my-2'}`}>
+          <img src={banner} className="w-full h-full hidden lg:block" alt="banner" />
+          <img src={bannerMobile} className="w-full h-full lg:hidden" alt="banner" />
+        </div>
       </div>
 
-      {/***display category product */}
-      {
+        {/***display category product */}
+         {
         categoryData?.map((c,index)=>{
           return(
             <CategoryWiseProductDisplay 
@@ -83,10 +39,48 @@ const Home = () => {
         })
       }
 
+      <div className="container mx-auto px-4 my-4">
+        {loadingCategory ? (
+          new Array(12).fill(null).map((_, index) => (
+            <div key={index + 'loadingcategory'} className="bg-white rounded p-4 min-h-36 grid gap-2 shadow animate-pulse">
+              <div className="bg-blue-100 min-h-24 rounded"></div>
+              <div className="bg-blue-100 h-8 rounded"></div>
+            </div>
+          ))
+        ) : (
+          categoryData.map((category) => (
+            <div key={category.id + 'category'} className="mb-6">
+              {/* Category Name */}
+              <h2 className="text-xl font-bold mb-4">{category.name}</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {/* Subcategories */}
+                {subCategoryData
+                  .filter((sub) => sub.category?.id === category.id)
+                  .map((subCategory) => (
+                    <div
+                      key={subCategory.id + 'subcategory'}
+                      className="bg-white rounded p-4 shadow cursor-pointer hover:shadow-lg"
+                      onClick={() =>
+                        handleRedirectProductListpage(category.id, subCategory.id, category.name, subCategory.name)
+                      }
+                    >
+                      <div className="w-full h-24 bg-blue-100 rounded mb-2">
+                        <img
+                          src={subCategory.image || 'https://via.placeholder.com/150'}
+                          alt={subCategory.name}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      </div>
+                      <p className="text-center font-medium">{subCategory.name}</p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+};
 
-
-   </section>
-  )
-}
-
-export default Home
+export default Home;

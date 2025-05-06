@@ -85,6 +85,10 @@ const SummaryApi = {
         url : '/api/address/disable',
         method : 'delete'
     },
+    getProductByCategoryAndSubCategory : {
+        url : '/api/product/get-pruduct-by-category-and-subcategory',
+        method : 'post'
+    },
 
 
 }

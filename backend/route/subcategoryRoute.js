@@ -8,4 +8,5 @@ const subCategoryRouter = Router()
 subCategoryRouter.post('/get',getSubCategoryController)
 
 
+
 export default subCategoryRouter
