@@ -19,6 +19,12 @@ const AddToCartButton = ({ data }) => {
         e.preventDefault()
         e.stopPropagation()
 
+        // Check stock before adding to cart
+        if (data.stock <= 0) {
+            toast.error("Out of Stock");
+            return;
+        }
+
         try {
             setLoading(true)
 
@@ -47,10 +53,10 @@ const AddToCartButton = ({ data }) => {
 
     //checking this item in cart or not
     useEffect(() => {
-        const checkingitem = cartItem.some(item => item.productId._id === data._id)
+        const checkingitem = cartItem.some(item => item.product.id === data.id)
         setIsAvailableCart(checkingitem)
 
-        const product = cartItem.find(item => item.productId._id === data._id)
+        const product = cartItem.find(item => item.product.id === data.id)
         setQty(product?.quantity)
         setCartItemsDetails(product)
     }, [data, cartItem])
