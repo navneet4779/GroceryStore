@@ -7,8 +7,7 @@ import { motion } from 'framer-motion';
 
 const MyOrders = () => {
   const orders = useSelector(state => state.orders.order);
-  console.error("order Items", orders);
-
+  console.error(orders, "orders");
   const containerVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.5, delayChildren: 0.2 } },
@@ -65,12 +64,12 @@ const MyOrders = () => {
                     </span>
                   </p>
                 </div>
-                {order?.deliveryAddress && (
+                {order?.address && (
                   <div className="mt-2 md:mt-0 text-right">
                     <h6 className="font-semibold text-gray-700">Shipping To:</h6>
-                    <p className="text-sm text-gray-600">{order.deliveryAddress.street}</p>
-                    <p className="text-sm text-gray-600">{`${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.postalCode}`}</p>
-                    <p className="text-sm text-gray-600">{order.deliveryAddress.country}</p>
+                    <p className="text-sm text-gray-600">{order.address.address_line}</p>
+                    <p className="text-sm text-gray-600">{`${order.address.city}, ${order.address.state} - ${order.address.pincode}`}</p>
+                    <p className="text-sm text-gray-600">{order.address.country}</p>
                   </div>
                 )}
               </div>
@@ -86,24 +85,26 @@ const MyOrders = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {order?.orderItems?.map(item => (
-                      <tr key={item.id} className="border-b border-gray-200">
+                    <tr key={order.id} className="border-b border-gray-200">
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3">
                             <img
-                              src={item?.product_details?.image || 'https://via.placeholder.com/50'}
-                              alt={item?.product_details?.name}
-                              className="w-10 h-10 object-cover rounded"
+                            src={order?.product_details ? JSON.parse(order.product_details)?.image : 'https://via.placeholder.com/50'}
+                            alt={order?.product_details ? JSON.parse(order.product_details)?.name : 'Product'}
+                            className="w-10 h-10 object-cover rounded"
                             />
-                            <p className="font-medium text-gray-700">{item?.product_details?.name}</p>
-                          </div>
+                            <p className="font-medium text-gray-700">
+                            {order?.product_details ? JSON.parse(order.product_details)?.name : 'Unknown Product'}
+                            </p>
+                        </div>
                         </td>
-                        <td className="px-4 py-3">{DisplayPriceInRupees(item?.product_details?.price)}</td>
-                        <td className="px-4 py-3">{item?.quantity}</td>
-                        <td className="px-4 py-3">{DisplayPriceInRupees(item?.product_details?.price * item?.quantity)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        <td className="px-4 py-3">{DisplayPriceInRupees(order?.price || 0)}</td>
+                        <td className="px-4 py-3">{order?.quantity || 1}</td>
+                        <td className="px-4 py-3">
+                        {DisplayPriceInRupees((order?.price || 0) * (order?.quantity || 1))}
+                        </td>
+                    </tr>
+                    </tbody>
                 </table>
               </div>
             </motion.div>

@@ -2,64 +2,62 @@ import UserModel from '../models/userModel.js'
 import bcryptjs from 'bcryptjs'
 import generatedAccessToken from '../utils/generatedAccessToken.js'
 import genertedRefreshToken from '../utils/generatedRefreshToken.js'
-export async function registerUserController(request,response){
-    
+import sendEmail from '../config/sendEmail.js'
+import forgotPasswordTemplate from '../utils/forgotPasswordTemplate.js'
+
+export async function registerUserController(request, response) {
     try {
-        const { name, email , password } = request.body
-        if(!name || !email || !password){
+        const { name, email, password } = request.body;
+
+        // Validate input fields
+        if (!name || !email || !password) {
             return response.status(400).json({
-                message : "provide email, name, password",
-                error : true,
-                success : false
-            })
+                message: "Please provide name, email, and password",
+                error: true,
+                success: false,
+            });
         }
 
-        const user = await UserModel.findOne({ email })
+        // Check if the user already exists
+        const user = await UserModel.findOne({
+            where: { email }, // Use Sequelize's `where` clause
+        });
 
-        if(user){
-            return response.json({
-                message : "Already register email",
-                error : true,
-                success : false
-            })
+        if (user) {
+            return response.status(400).json({
+                message: "Email is already registered",
+                error: true,
+                success: false,
+            });
         }
 
-        const salt = await bcryptjs.genSalt(10)
-        const hashPassword = await bcryptjs.hash(password,salt)
+        // Hash the password
+        const salt = await bcryptjs.genSalt(10);
+        const hashPassword = await bcryptjs.hash(password, salt);
 
+        // Create the user payload
         const payload = {
             name,
             email,
-            password : hashPassword
-        }
+            password: hashPassword,
+        };
 
-        const newUser = new UserModel(payload)
-        const save = await newUser.save()
+        // Save the new user to the database
+        const newUser = await UserModel.create(payload);
 
-        //const VerifyEmailUrl = `${process.env.FRONTEND_URL}/verify-email?code=${save?._id}`
-
-        /*const verifyEmail = await sendEmail({
-            sendTo : email,
-            subject : "Verify email from binkeyit",
-            html : verifyEmailTemplate({
-                name,
-                url : VerifyEmailUrl
-            })
-        })*/
-
-        return response.json({
-            message : "User register successfully",
-            error : false,
-            success : true,
-            data : save
-        })
-
+        return response.status(201).json({
+            message: "User registered successfully",
+            error: false,
+            success: true,
+            data: newUser,
+        });
     } catch (error) {
+        console.error("Error in registerUserController:", error.message);
         return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
+            message: error.message || "Internal Server Error",
+            error: true,
+            success: false,
+        });
     }
 }
 
@@ -309,6 +307,201 @@ export async function refreshToken(request,response){
             }
         })
 
+
+    } catch (error) {
+        return response.status(500).json({
+            message : error.message || error,
+            error : true,
+            success : false
+        })
+    }
+}
+
+export async function forgotPasswordController(request, response) {
+    try {
+        const { email } = request.body;
+
+        // Check if the email is provided
+        if (!email) {
+            return response.status(400).json({
+                message: "Please provide an email address",
+                error: true,
+                success: false,
+            });
+        }
+
+        // Find the user by email
+        const user = await UserModel.findOne({
+            where: { email },
+        });
+
+        if (!user) {
+            return response.status(400).json({
+                message: "Email not registered",
+                error: true,
+                success: false,
+            });
+        }
+
+        // Generate OTP and expiry time
+        const otp = Math.floor(Math.random() * 900000) + 100000;
+        const expireTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+        // Update the user's forgot password OTP and expiry in the database
+        await UserModel.update(
+            {
+                forgot_password_otp: otp,
+                forgot_password_expiry: expireTime,
+            },
+            {
+                where: { id: user.id },
+            }
+        );
+
+        // Send the OTP to the user's email
+        await sendEmail({
+            sendTo: email,
+            subject: "Forgot Password - Grocery Store",
+            html: forgotPasswordTemplate({
+                name: user.name,
+                otp: otp,
+            }),
+        });
+
+        return response.json({
+            message: "Check your email for the OTP",
+            error: false,
+            success: true,
+        });
+    } catch (error) {
+        console.error("Error in forgotPasswordController:", error.message);
+        return response.status(500).json({
+            message: error.message || "Internal Server Error",
+            error: true,
+            success: false,
+        });
+    }
+}
+
+
+export async function verifyForgotPasswordOtp(request,response){
+    try {
+        const { email , otp }  = request.body
+
+        if(!email || !otp){
+            return response.status(400).json({
+                message : "Provide required field email, otp.",
+                error : true,
+                success : false
+            })
+        }
+
+        const user = await UserModel.findOne({
+            where: { email },
+        });
+
+        if(!user){
+            return response.status(400).json({
+                message : "Email not available",
+                error : true,
+                success : false
+            })
+        }
+
+        const currentTime = new Date().toISOString()
+
+        if(user.forgot_password_expiry < currentTime  ){
+            return response.status(400).json({
+                message : "Otp is expired",
+                error : true,
+                success : false
+            })
+        }
+
+        if(otp !== user.forgot_password_otp){
+            return response.status(400).json({
+                message : "Invalid otp",
+                error : true,
+                success : false
+            })
+        }
+
+        //if otp is not expired
+        //otp === user.forgot_password_otp
+
+        const updateUser = await UserModel.update(
+            {
+                forgot_password_otp: "", // Clear the OTP
+                forgot_password_expiry: "", // Clear the expiry
+            },
+            {
+                where: { id: user.id }, // Use the user's ID to find the record
+            }
+        );
+        
+        return response.json({
+            message : "Verify otp successfully",
+            error : false,
+            success : true
+        })
+
+    } catch (error) {
+        return response.status(500).json({
+            message : error.message || error,
+            error : true,
+            success : false
+        })
+    }
+}
+
+
+export async function resetpassword(request,response){
+    try {
+        const { email , newPassword, confirmPassword } = request.body 
+
+        if(!email || !newPassword || !confirmPassword){
+            return response.status(400).json({
+                message : "provide required fields email, newPassword, confirmPassword"
+            })
+        }
+
+        const user = await UserModel.findOne({
+            where: { email },
+        });
+
+        if(!user){
+            return response.status(400).json({
+                message : "Email is not available",
+                error : true,
+                success : false
+            })
+        }
+
+        if(newPassword !== confirmPassword){
+            return response.status(400).json({
+                message : "newPassword and confirmPassword must be same.",
+                error : true,
+                success : false,
+            })
+        }
+
+        const salt = await bcryptjs.genSalt(10)
+        const hashPassword = await bcryptjs.hash(newPassword,salt)
+
+        const update = await UserModel.update(
+            {
+                password: hashPassword, // Update the password
+            },
+            {
+                where: { id: user.id }, // Use the user's ID to find the record
+            }
+        );
+
+        return response.json({
+            message : "Password updated successfully.",
+            error : false,
+            success : true
+        })
 
     } catch (error) {
         return response.status(500).json({

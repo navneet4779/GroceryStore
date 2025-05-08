@@ -100,9 +100,16 @@ export async function getOrderDetailsController(request,response){
                 {
                     model: AddressModel, // Include the delivery address details
                     as: "address", // Alias for the relationship
+                    attributes: ["address_line", "city", "state", "country", "pincode", "mobile","status"], // Select specific fields from the user model
+                },
+                {
+                    model: UserModel, // Include the user details
+                    as: "user", // Alias for the relationship
+                    attributes: ["name", "email", "mobile"], // Select specific fields from the user model
                 },
             ],
-            order: [["createdAt", "DESC"]], // Sort by createdAt in descending order
+            order: [["createdAt", "DESC"]], // Sort by createdAt in descending 
+            logging:console.log // Log the SQL query for debugging
         });
 
         return response.json({

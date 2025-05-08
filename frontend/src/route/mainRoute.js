@@ -12,74 +12,85 @@ import MyOrders from "../pages/MyOrders";
 import ProductDisplayPage from "../pages/ProductDisplayPage";
 import Address from "../pages/Address";
 import ProductListPage from "../pages/ProductListPage";
+import AdminPanel from "../pages/AdminPanel";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
+
 
 const router = createBrowserRouter([
     {
-        path : "/",
-        element : <App/>,
-        children : [
+        path: "/",
+        element: <App />,
+        children: [
             {
-                path : "",
-                element : <Home/>
+                path: "",
+                element: <Home />,
             },
             {
-                path : 'login',
-                element : <Login/>,
+                path: "login",
+                element: <Login />,
             },
             {
-                path : 'register',
-                element : <Register/>,
-            },            
-            {
-                path : "search",
-                element : <SearchPage/>
+                path: "register",
+                element: <Register />,
             },
             {
-                path : "checkout",
-                element : <CheckoutPage/>
+                path: "forgot-password",
+                element: <ForgotPassword />,
             },
             {
-                path : "success",
-                element : <Success/>
+                path : "reset-password",
+                element : <ResetPassword/>
             },
             {
-                path : "dashboard",
-                element : <Dashboard/>,
-                children : [
+                path: "search",
+                element: <SearchPage />,
+            },
+            {
+                path: "checkout",
+                element: <CheckoutPage />,
+            },
+            {
+                path: "success",
+                element: <Success />,
+            },
+            {
+                path: "dashboard",
+                element: <Dashboard />,
+                children: [
                     {
-                        path : "profile",
-                        element : <Profile/>
+                        path: "admin-overview", // Fixed: Removed leading "/"
+                        element: <AdminPanel />,
                     },
                     {
-                        path : "myorders",
-                        element : <MyOrders/>
+                        path: "profile",
+                        element: <Profile />,
                     },
                     {
-                        path : "address",
-                        element : <Address/>
+                        path: "myorders",
+                        element: <MyOrders />,
                     },
-                ]
-            },
-            {
-                path : "product/:product",
-                element : <ProductDisplayPage/>
-            },
-            {
-                path : ":category",
-                children : [
                     {
-                        path : ":subCategory",
-                        element : <ProductListPage/>
-                    }
-                ]
+                        path: "address",
+                        element: <Address />,
+                    },
+                ],
             },
+            {
+                path: "product/:product",
+                element: <ProductDisplayPage />,
+            },
+            {
+                path: ":category",
+                children: [
+                    {
+                        path: ":subCategory",
+                        element: <ProductListPage />,
+                    },
+                ],
+            },
+        ],
+    },
+]);
 
-        
-
-
-
-        ]
-    }
-])
-
-export default router
+export default router;

@@ -11,6 +11,7 @@ import { setOrder } from "../store/orderSlice";
 
 export const GlobalContext = createContext(null)
 
+export const useGlobalContext = ()=> useContext(GlobalContext)
 
 const GlobalProvider = ({children}) => {
      const dispatch = useDispatch()
@@ -162,4 +163,3 @@ const GlobalProvider = ({children}) => {
 export default GlobalProvider
 
 
-export const useGlobalContext = ()=> useContext(GlobalContext)
