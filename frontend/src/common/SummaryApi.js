@@ -101,6 +101,26 @@ const SummaryApi = {
         url : "/api/user/reset-password",
         method : 'put'
     },
+    uploadImage : {
+        url : '/api/file/upload',
+        method : 'post'
+    },
+    addCategory : {
+        url : '/api/category/add-category',
+        method : 'post'
+    },
+    createSubCategory : {
+        url : '/api/subcategory/create',
+        method : 'post'
+    },
+    getProduct : {
+        url : '/api/product/get',
+        method : 'post'
+    },
+    createProduct : {
+        url : '/api/product/create',
+        method : 'post'
+    },
 
 
 }

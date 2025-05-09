@@ -10,6 +10,7 @@ import subcategoryRouter from './route/subcategoryRoute.js'
 import cartRouter from './route/cartRoute.js'
 import addressRouter from './route/addressRoute.js'
 import orderRouter from './route/orderRoute.js'
+import uploadRouter from './route/uploadRouter.js'
 import { connectDB } from './config/connectDB.js';
 
 const app = express();
@@ -39,6 +40,7 @@ app.use("/api/subcategory",subcategoryRouter)
 app.use("/api/cart",cartRouter)
 app.use("/api/address",addressRouter)
 app.use('/api/order',orderRouter)
+app.use("/api/file",uploadRouter)
 
 // Connect to the database and start the server
 connectDB().then(()=>{

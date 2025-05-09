@@ -204,3 +204,114 @@ export const getProductByCategoryAndSubCategory = async (request, response) => {
         });
     }
 };
+
+export const getProductController = async (request, response) => {
+    try {
+        let { page, limit, search } = request.body;
+
+        // Set default values for pagination
+        page = page || 1;
+        limit = limit || 10;
+
+        // Build the search query
+        const query = search
+            ? {
+                  [Op.or]: [
+                      { name: { [Op.like]: `%${search}%` } }, // Search by product name
+                      { description: { [Op.like]: `%${search}%` } }, // Search by product description
+                  ],
+              }
+            : {};
+
+        // Calculate the offset for pagination
+        const offset = (page - 1) * limit;
+
+        // Fetch data and count in parallel
+        const [data, totalCount] = await Promise.all([
+            ProductModel.findAll({
+                where: query,
+                include: [
+                    { model: CategoryModel, as: "category" }, // Include category details
+                    { model: SubCategoryModel, as: "subCategory" }, // Include sub-category details
+                ],
+                order: [["createdAt", "DESC"]], // Sort by createdAt in descending order
+                limit: parseInt(limit), // Limit the number of results
+                offset: parseInt(offset), // Skip results for pagination
+            }),
+            ProductModel.count({ where: query }),
+        ]);
+
+        // Return the response
+        return response.json({
+            message: "Product data",
+            error: false,
+            success: true,
+            totalCount: totalCount,
+            totalNoPage: Math.ceil(totalCount / limit),
+            data: data,
+        });
+    } catch (error) {
+        console.error("Error in getProductController:", error.message);
+        return response.status(500).json({
+            message: error.message || "Internal Server Error",
+            error: true,
+            success: false,
+        });
+    }
+};
+
+export const createProductController = async(request,response)=>{
+    try {
+        const { 
+            name ,
+            image ,
+            category,
+            subCategory,
+            unit,
+            stock,
+            price,
+            discount,
+            description,
+            more_details,
+        } = request.body 
+
+        if(!name || !image[0] || !category[0] || !subCategory[0] || !unit || !price || !description ){
+            return response.status(400).json({
+                message : "Enter required fields",
+                error : true,
+                success : false
+            })
+        }
+
+        const categoryId = category[0];
+        const subCategoryId = subCategory[0]; // Use subCategory[0] if it's an array
+
+        const product = new ProductModel({
+            name ,
+            image ,
+            categoryId,
+            subCategoryId,
+            unit,
+            stock,
+            price,
+            discount,
+            description,
+            more_details,
+        })
+        const saveProduct = await product.save()
+
+        return response.json({
+            message : "Product Created Successfully",
+            data : saveProduct,
+            error : false,
+            success : true
+        })
+
+    } catch (error) {
+        return response.status(500).json({
+            message : error.message || error,
+            error : true,
+            success : false
+        })
+    }
+}

@@ -3,20 +3,18 @@ import SummaryApi , { baseURL } from "../common/SummaryApi";
 
 const Axios = axios.create({
     baseURL : baseURL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
     withCredentials : true
 })
 
 //sending access token in the header
 Axios.interceptors.request.use(
     async(config)=>{
-        const accessToken = localStorage.getItem('accessToken')
-       
+        const accessToken = localStorage.getItem('accesstoken')
+
         if(accessToken){
             config.headers.Authorization = `Bearer ${accessToken}`
         }
+
         return config
     },
     (error)=>{

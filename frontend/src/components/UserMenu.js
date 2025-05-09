@@ -77,13 +77,9 @@ const UserMenu = ({ close }) => {
             path: '/dashboard/subcategory',
             icon: <MdOutlineDynamicFeed size={20} className="text-gray-500 group-hover:text-primary-600" />,
           },
+  
           {
-            label: 'Upload Product',
-            path: '/dashboard/upload-product',
-            icon: <MdOutlineFileUpload size={20} className="text-gray-500 group-hover:text-primary-600" />,
-          },
-          {
-            label: 'All Products',
+            label: 'Products',
             path: '/dashboard/product',
             icon: <MdOutlineShoppingBag size={20} className="text-gray-500 group-hover:text-primary-600" />,
           },

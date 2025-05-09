@@ -15,6 +15,9 @@ import ProductListPage from "../pages/ProductListPage";
 import AdminPanel from "../pages/AdminPanel";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import CategoryPage from "../pages/CategoryPage";
+import SubCategoryPage from "../pages/SubCategoryPage";
+import ProductAdmin from "../pages/ProductAdmin";
 
 
 const router = createBrowserRouter([
@@ -74,6 +77,18 @@ const router = createBrowserRouter([
                         path: "address",
                         element: <Address />,
                     },
+                    {
+                        path : 'category',
+                        element : <CategoryPage/>
+                    },
+                    {
+                        path : "subcategory",
+                        element : <SubCategoryPage/>
+                    },
+                    {
+                        path : 'product',
+                        element : <ProductAdmin/>
+                    }
                 ],
             },
             {
