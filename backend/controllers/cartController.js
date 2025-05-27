@@ -4,11 +4,11 @@ import CartProductModel from "../models/cartproductModel.js"; // Sequelize model
 
 export const getCartItemController = async (request, response) => {
     try {
-        const userId = request.userId;
+        //const userId = request.userId;
 
         // Fetch cart items for the user and include product details
         const cartItems = await CartProduct.findAll({
-            where: { userId: userId },
+            //where: { userId: userId },
             include: [
                 {
                     model: Product,
@@ -33,7 +33,7 @@ export const getCartItemController = async (request, response) => {
 
 export const addToCartItemController = async (request, response) => {
     try {
-        const userId = request.userId;
+        //const userId = request.userId;
         const { productId } = request.body;
 
         if (!productId) {
@@ -47,7 +47,7 @@ export const addToCartItemController = async (request, response) => {
         // Check if the item already exists in the cart
         const checkItemCart = await CartProduct.findOne({
             where: {
-                userId: userId,
+                //userId: userId,
                 productId: productId,
             },
         });
@@ -63,7 +63,7 @@ export const addToCartItemController = async (request, response) => {
         // Add the item to the cart
         const cartItem = await CartProduct.create({
             quantity: 1,
-            userId: userId,
+            //userId: userId,
             productId: productId,
         });
 
@@ -84,7 +84,7 @@ export const addToCartItemController = async (request, response) => {
 
 export const updateCartItemQtyController = async(request,response)=>{
     try {
-        const userId = request.userId 
+        //const userId = request.userId 
         const { id,qty } = request.body
 
         if(!id ||  !qty){
@@ -99,7 +99,7 @@ export const updateCartItemQtyController = async(request,response)=>{
             {
                 where: {
                     id: id,
-                    userId: userId,
+                    //userId: userId,
                 },
             }
         );
@@ -128,7 +128,7 @@ export const updateCartItemQtyController = async(request,response)=>{
 
 export const deleteCartItemQtyController = async(request,response)=>{
     try {
-      const userId = request.userId // middleware
+      //const userId = request.userId // middleware
       const { _id } = request.body 
       
       if(!_id){
@@ -142,7 +142,7 @@ export const deleteCartItemQtyController = async(request,response)=>{
       const deleteCartItem = await CartProductModel.destroy({
         where: {
             id: _id,
-            userId: userId,
+            //userId: userId,
         },
         });
 

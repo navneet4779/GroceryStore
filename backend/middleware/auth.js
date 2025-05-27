@@ -23,6 +23,7 @@ const auth = async (request, response, next) => {
         }
         console.log("Request Headers:", decode.id); // Debugging
         request.userId = decode.id;
+        
         next();
     } catch (error) {
         console.error("Auth Middleware Error:", error.message); // Debugging

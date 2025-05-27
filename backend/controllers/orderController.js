@@ -5,56 +5,82 @@ import ProductModel from '../models/productModel.js'
 import AddressModel from '../models/addressModel.js'
 import Stripe from "../config/stripe.js";
 import Sequelize from 'sequelize'
-export async function CashOnDeliveryOrderController(request,response){
+export async function CashOnDeliveryOrderController(request, response) {
     try {
-        const userId = request.userId // auth middleware 
-        const { list_items, totalAmt, addressId,subTotalAmt } = request.body 
-        console.log("list_items",addressId)
-        if(!addressId){
-            return response.status(400).json({
-                message : "Provide address",  
-                error : true,
-                success : false
-            })
-        }
+        //const userId = request.userId; // Auth middleware
+        const { list_items, totalAmt, addressId, subTotalAmt,userId } = request.body;
 
-        for (const item of list_items) {
-            const productExists = await ProductModel.findByPk(item.product.id);
-            if (!productExists) {
-                return response.status(400).json({
-                    message: `Product with ID ${item.product.id} does not exist`,
-                    error: true,
-                    success: false,
-                });
-            }
-        // Check if stock is sufficient
-        if (productExists.stock < item.quantity) {
+        // Validate addressId
+        if (!addressId) {
             return response.status(400).json({
-                message: `Insufficient stock for product: ${item.product.name}`,
+                message: "Please provide a valid address.",
                 error: true,
                 success: false,
             });
         }
-    }
 
-        const payload = list_items.map((el) => {
-            return {
-                userId: userId,
-                orderId: `ORD-${Date.now()}`, // Generate unique order ID
-                productId: el.product.id, // Assuming Sequelize uses `id` instead of `_id`
-                product_details: JSON.stringify({
-                    name: el.product.name,
-                    image: el.product.image,
-                }),
-                paymentId: "",
-                payment_status: "CASH ON DELIVERY",
-                delivery_address: addressId,
-                subTotalAmt: subTotalAmt,
-                totalAmt: totalAmt,
-            };
-        });
+        // Validate list_items
+        if (!list_items || !Array.isArray(list_items) || list_items.length === 0) {
+            return response.status(400).json({
+                message: "Please provide valid list items.",
+                error: true,
+                success: false,
+            });
+        }
 
+        await CartProductModel.update(
+            { userId: userId },
+            { where: {} }
+        );
+
+        // Validate each product in the list
+        for (const item of list_items) {
+            const productExists = await ProductModel.findByPk(item.product.id);
+
+            if (!productExists) {
+                return response.status(400).json({
+                    message: `Product with ID ${item.product.id} does not exist.`,
+                    error: true,
+                    success: false,
+                });
+            }
+
+            // Check if stock is sufficient
+            if (productExists.stock < item.quantity) {
+                return response.status(400).json({
+                    message: `Insufficient stock for product: ${item.product.name}.`,
+                    error: true,
+                    success: false,
+                });
+            }
+        }
+
+        // Prepare the payload for the order table
+        const payload = list_items.map((el) => ({
+            userId: userId,
+            orderId: `ORD-${Date.now()}`, // Generate unique order ID
+            productId: el.product.id, // Assuming Sequelize uses `id`
+            product_details: JSON.stringify({
+                name: el.product.name,
+                image: el.product.image,
+            }),
+            paymentId: "",
+            payment_status: "CASH ON DELIVERY",
+            delivery_address: addressId,
+            subTotalAmt: subTotalAmt,
+            totalAmt: totalAmt,
+        }));
+
+        // Create the order in the database
         const generatedOrder = await OrderModel.bulkCreate(payload);
+
+        if (!generatedOrder) {
+            return response.status(500).json({
+                message: "Failed to create order.",
+                error: true,
+                success: false,
+            });
+        }
 
         // Subtract stock for each product
         for (const item of list_items) {
@@ -64,28 +90,29 @@ export async function CashOnDeliveryOrderController(request,response){
             );
         }
 
-        ///remove from the cart
+        // Remove items from the cart
         await CartProductModel.destroy({
             where: { userId: userId },
         });
+
+        // Clear the user's shopping cart
         await UserModel.update(
             { shopping_cart: [] },
             { where: { id: userId } }
         );
 
         return response.json({
-            message : "Order successfully",
-            error : false,
-            success : true,
-            data : generatedOrder
-        })
-
+            message: "Order placed successfully.",
+            error: false,
+            success: true,
+            data: generatedOrder,
+        });
     } catch (error) {
         return response.status(500).json({
-            message : error.message || error ,
-            error : true,
-            success : false
-        })
+            message: error.message || "An error occurred while processing the order.",
+            error: true,
+            success: false,
+        });
     }
 }
 
@@ -198,4 +225,79 @@ export async function paymentController(request,response){
             success : false
         })
     }
+}
+
+const getOrderProductItems = async({
+    lineItems,
+    userId,
+    addressId,
+    paymentId,
+    payment_status,
+ })=>{
+    const productList = []
+
+    if(lineItems?.data?.length){
+        for(const item of lineItems.data){
+            const product = await Stripe.products.retrieve(item.price.product)
+
+            const paylod = {
+                userId : userId,
+                orderId : `ORD-${new mongoose.Types.ObjectId()}`,
+                productId : product.metadata.productId, 
+                product_details : {
+                    name : product.name,
+                    image : product.images
+                } ,
+                paymentId : paymentId,
+                payment_status : payment_status,
+                delivery_address : addressId,
+                subTotalAmt  : Number(item.amount_total / 100),
+                totalAmt  :  Number(item.amount_total / 100),
+            }
+
+            productList.push(paylod)
+        }
+    }
+
+    return productList
+}
+
+//http://localhost:8080/api/order/webhook
+export async function webhookStripe(request,response){
+    const event = request.body;
+    const endPointSecret = process.env.STRIPE_ENPOINT_WEBHOOK_SECRET_KEY
+
+    console.log("event",event)
+
+    // Handle the event
+  switch (event) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      const lineItems = await Stripe.checkout.sessions.listLineItems(session.id)
+      const userId = session.metadata.userId
+      const orderProduct = await getOrderProductItems(
+        {
+            lineItems : lineItems,
+            userId : userId,
+            addressId : session.metadata.addressId,
+            paymentId  : session.payment_intent,
+            payment_status : session.payment_status,
+        })
+    
+      const order = await OrderModel.insertMany(orderProduct)
+
+        console.log(order)
+        if(Boolean(order[0])){
+            const removeCartItems = await  UserModel.findByIdAndUpdate(userId,{
+                shopping_cart : []
+            })
+            const removeCartProductDB = await CartProductModel.deleteMany({ userId : userId})
+        }
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Return a response to acknowledge receipt of the event
+  response.json({received: true});
 }

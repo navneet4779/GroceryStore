@@ -5,10 +5,10 @@ import {getCartItemController,addToCartItemController,updateCartItemQtyControlle
 const cartRouter = Router()
 
 
-cartRouter.get("/get",auth,getCartItemController)
-cartRouter.post('/create',auth,addToCartItemController)
-cartRouter.put('/update-qty',auth,updateCartItemQtyController)
-cartRouter.delete('/delete-cart-item',auth,deleteCartItemQtyController)
+cartRouter.get("/get",getCartItemController)
+cartRouter.post('/create',addToCartItemController)
+cartRouter.put('/update-qty',updateCartItemQtyController)
+cartRouter.delete('/delete-cart-item',deleteCartItemQtyController)
 
 
 export default cartRouter

@@ -7,7 +7,7 @@ import AxiosToastError from '../utils/AxiosToastError';
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaCheckCircle, FaMapMarkerAlt, FaCreditCard, FaMoneyBillAlt } from 'react-icons/fa';
@@ -20,6 +20,8 @@ const CheckoutPage = () => {
   const cartItemsList = useSelector(state => state.cartItem.cart);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const userId = location.state?.userId;
 
   useEffect(() => {
     const firstValidAddressIndex = addressList.findIndex(address => address.status);
@@ -37,6 +39,7 @@ const CheckoutPage = () => {
           addressId: addressList[selectAddress]?.id,
           subTotalAmt: totalPrice,
           totalAmt: totalPrice,
+          userId: userId, // Pass userId if available
         },
       });
       const { data: responseData } = response;
@@ -70,7 +73,7 @@ const CheckoutPage = () => {
         ...SummaryApi.payment_url,
         data: {
           list_items: cartItemsList,
-          addressId: addressList[selectAddress]?._id,
+          addressId: addressList[selectAddress]?.id,
           subTotalAmt: totalPrice,
           totalAmt: totalPrice,
         },

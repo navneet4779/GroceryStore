@@ -19,7 +19,7 @@ const DisplayCartItem = ({ close }) => {
 
     const redirectToCheckoutPage = () => {
         if (user?.id) {
-            navigate("/checkout");
+            navigate("/checkout", { state: { userId: user.id } });
             if (close) {
                 close();
             }

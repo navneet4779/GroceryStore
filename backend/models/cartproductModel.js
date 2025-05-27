@@ -25,7 +25,7 @@ const CartProductModel = sequelize.define(
         },
         userId: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             references: {
                 model: UserModel, // Reference the User model
                 key: "id",
