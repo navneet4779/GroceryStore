@@ -4,6 +4,7 @@ import generatedAccessToken from '../utils/generatedAccessToken.js'
 import genertedRefreshToken from '../utils/generatedRefreshToken.js'
 import sendEmail from '../config/sendEmail.js'
 import forgotPasswordTemplate from '../utils/forgotPasswordTemplate.js'
+import verifyEmailTemplate from '../utils/verifyEmailTemplate.js'
 
 export async function registerUserController(request, response) {
     try {
@@ -44,6 +45,17 @@ export async function registerUserController(request, response) {
 
         // Save the new user to the database
         const newUser = await UserModel.create(payload);
+
+        const VerifyEmailUrl = `${process.env.FRONTEND_URL}/verify-email?code=${newUser?.id}`
+
+        const verifyEmail = await sendEmail({
+            sendTo : email,
+            subject : "Verify email from Grocery Store",
+            html : verifyEmailTemplate({
+                name,
+                url : VerifyEmailUrl
+            })
+        })
 
         return response.status(201).json({
             message: "User registered successfully",
