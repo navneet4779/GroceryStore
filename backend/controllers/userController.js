@@ -1,4 +1,5 @@
 import UserModel from '../models/userModel.js'
+import CartProduct  from "../models/cartproductModel.js";
 import bcryptjs from 'bcryptjs'
 import generatedAccessToken from '../utils/generatedAccessToken.js'
 import genertedRefreshToken from '../utils/generatedRefreshToken.js'
@@ -142,6 +143,7 @@ export async function loginController(request, response) {
             message: "Login successful",
             error: false,
             success: true,
+            userID: user.id, // Use `id` for MySQL
             token: {
                 accessToken,
                 refreshToken,
@@ -212,6 +214,10 @@ export async function logoutController(request,response){
             { refresh_token: "" }, // Set refresh_token to an empty string
             { where: { id: userId } } // Find the user by ID
         );
+
+        CartProduct.destroy({
+            where: { userId: null } // Clear the user's cart
+        });
 
         return response.json({
             message : "Logout successfully",

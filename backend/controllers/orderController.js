@@ -136,7 +136,7 @@ export async function getOrderDetailsController(request,response){
                 },
             ],
             order: [["createdAt", "DESC"]], // Sort by createdAt in descending 
-            logging:console.log // Log the SQL query for debugging
+            //logging:console.log // Log the SQL query for debugging
         });
 
         return response.json({
@@ -175,7 +175,7 @@ export async function paymentController(request,response){
 
         const user = await UserModel.findByPk(userId)
 
-        const line_items  = list_items.map(item =>{
+        /*const line_items  = list_items.map(item =>{
             console.log("params",item.product.name,item.product.id)
             return{
                price_data : {
@@ -196,27 +196,30 @@ export async function paymentController(request,response){
                quantity : item.quantity 
             }
             
-        })
+        })*/
 
         
 
         const params = {
-            submit_type : 'pay',
-            mode : 'payment',
+            amount : subTotalAmt * 1000, // Amount in paise
+            currency : 'usd',
+            description : 'Order Payment',
+            //confirm : true,
             payment_method_types : ['card'],
-            customer_email : user.email,
+            receipt_email : user.email,
+            setup_future_usage : 'off_session',
             metadata : {
                 userId : userId,
                 addressId : addressId
             },
-            line_items : line_items,
-            success_url : `${process.env.FRONTEND_URL}/success`,
-            cancel_url : `${process.env.FRONTEND_URL}/cancel`
+            capture_method : 'automatic',
+            //success_url : `${process.env.FRONTEND_URL}/success`,
+            //cancel_url : `${process.env.FRONTEND_URL}/cancel`
+            //return_url : `${process.env.FRONTEND_URL}/success`
         }
+        const session = await Stripe.paymentIntents.create(params)
 
-        const session = await Stripe.checkout.sessions.create(params)
-
-        return response.status(200).json(session)
+        return response.status(200).json(session.client_secret )
 
     } catch (error) {
         return response.status(500).json({
@@ -227,77 +230,69 @@ export async function paymentController(request,response){
     }
 }
 
-const getOrderProductItems = async({
-    lineItems,
-    userId,
-    addressId,
-    paymentId,
-    payment_status,
- })=>{
-    const productList = []
+export async function savePaymentController(request,response){
+    try {
+        const userId = request.userId // auth middleware 
+        const { list_items, stripeId, addressId, amount, status } = request.body 
 
-    if(lineItems?.data?.length){
-        for(const item of lineItems.data){
-            const product = await Stripe.products.retrieve(item.price.product)
-
-            const paylod = {
-                userId : userId,
-                orderId : `ORD-${new mongoose.Types.ObjectId()}`,
-                productId : product.metadata.productId, 
-                product_details : {
-                    name : product.name,
-                    image : product.images
-                } ,
-                paymentId : paymentId,
-                payment_status : payment_status,
-                delivery_address : addressId,
-                subTotalAmt  : Number(item.amount_total / 100),
-                totalAmt  :  Number(item.amount_total / 100),
-            }
-
-            productList.push(paylod)
-        }
-    }
-
-    return productList
-}
-
-//http://localhost:8080/api/order/webhook
-export async function webhookStripe(request,response){
-    const event = request.body;
-    const endPointSecret = process.env.STRIPE_ENPOINT_WEBHOOK_SECRET_KEY
-
-    console.log("event",event)
-
-    // Handle the event
-  switch (event) {
-    case 'checkout.session.completed':
-      const session = event.data.object;
-      const lineItems = await Stripe.checkout.sessions.listLineItems(session.id)
-      const userId = session.metadata.userId
-      const orderProduct = await getOrderProductItems(
-        {
-            lineItems : lineItems,
-            userId : userId,
-            addressId : session.metadata.addressId,
-            paymentId  : session.payment_intent,
-            payment_status : session.payment_status,
-        })
-    
-      const order = await OrderModel.insertMany(orderProduct)
-
-        console.log(order)
-        if(Boolean(order[0])){
-            const removeCartItems = await  UserModel.findByIdAndUpdate(userId,{
-                shopping_cart : []
+        if(!addressId){
+            return response.status(400).json({
+                message : "Provide address",  
+                error : true,
+                success : false
             })
-            const removeCartProductDB = await CartProductModel.deleteMany({ userId : userId})
         }
-      break;
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
 
-  // Return a response to acknowledge receipt of the event
-  response.json({received: true});
+        const payload = list_items.map((el) => ({
+            userId: userId,
+            orderId: `ORD-${Date.now()}`, // Generate unique order ID
+            productId: el.product.id, // Assuming Sequelize uses `id`
+            product_details: JSON.stringify({
+                name: el.product.name,
+                image: el.product.image,
+            }),
+            paymentId: stripeId,
+            payment_status: status,
+            delivery_address: addressId,
+            subTotalAmt: amount,
+            totalAmt: amount,
+        }));
+
+        // Create the order in the database
+        const generatedOrder = await OrderModel.bulkCreate(payload);
+
+        if (!generatedOrder) {
+            return response.status(500).json({
+                message: "Failed to create order.",
+                error: true,
+                success: false,
+            });
+        }
+
+        // Subtract stock for each product
+        for (const item of list_items) {
+            await ProductModel.update(
+                { stock: Sequelize.literal(`stock - ${item.quantity}`) }, // Decrement stock
+                { where: { id: item.product.id } }
+            );
+        }
+
+        // Remove items from the cart
+        await CartProductModel.destroy({
+            where: { userId: userId },
+        });
+
+        // Clear the user's shopping cart
+        await UserModel.update(
+            { shopping_cart: [] },
+            { where: { id: userId } }
+        );
+
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || "An error occurred while processing the order.",
+            error: true,
+            success: false,
+        });
+    }
 }

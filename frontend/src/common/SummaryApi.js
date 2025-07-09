@@ -81,6 +81,10 @@ const SummaryApi = {
         url : "/api/order/checkout",
         method : 'post'
     },
+    save_payment : {
+        url : "/api/order/save-payment",
+        method : 'post'
+    },
     disableAddress : {
         url : '/api/address/disable',
         method : 'delete'

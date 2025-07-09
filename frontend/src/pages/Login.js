@@ -75,8 +75,6 @@ const Login = () => {
         // If validation passes, proceed with login API call
         setLoading(true); // Start loading
         try {
-            console.log("Request Data:", data);
-
             const response = await Axios({
                 ...SummaryApi.login,
                 data: data,
@@ -94,6 +92,7 @@ const Login = () => {
 
                 const accessToken = response.data.token?.accessToken; // Use optional chaining
                 const refreshToken = response.data.token?.refreshToken; // Use optional chaining
+                const userId = response.data.userID; // Use optional chaining
 
                 if (!accessToken || !refreshToken) {
                     console.error("Tokens are missing in the response");
@@ -103,6 +102,7 @@ const Login = () => {
 
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('userId', userId); // Store userId in localStorage
 
                 // Fetch user details after successful login
                 const userDetails = await fetchUserDetails();

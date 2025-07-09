@@ -33,7 +33,7 @@ export const getCartItemController = async (request, response) => {
 
 export const addToCartItemController = async (request, response) => {
     try {
-        //const userId = request.userId;
+        const userId = 1;//request.userId;
         const { productId } = request.body;
 
         if (!productId) {
@@ -47,7 +47,7 @@ export const addToCartItemController = async (request, response) => {
         // Check if the item already exists in the cart
         const checkItemCart = await CartProduct.findOne({
             where: {
-                //userId: userId,
+                userId: userId,
                 productId: productId,
             },
         });
@@ -63,7 +63,7 @@ export const addToCartItemController = async (request, response) => {
         // Add the item to the cart
         const cartItem = await CartProduct.create({
             quantity: 1,
-            //userId: userId,
+            userId: userId,
             productId: productId,
         });
 

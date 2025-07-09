@@ -29,7 +29,6 @@ const GlobalProvider = ({children}) => {
           const { data : responseData } = response
           if(responseData.success){
             dispatch(handleAddItemCart(responseData.data))
-            console.log(responseData)
           }
     
         } catch (error) {

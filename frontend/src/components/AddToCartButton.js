@@ -7,6 +7,7 @@ import AxiosToastError from '../utils/AxiosToastError'
 import Loading from './Loading'
 import { useSelector } from 'react-redux'
 import { FaMinus, FaPlus } from "react-icons/fa6";
+import { useLocation } from 'react-router-dom'
 
 const AddToCartButton = ({ data }) => {
     const { fetchCartItem, updateCartItem, deleteCartItem } = useGlobalContext()
@@ -31,7 +32,8 @@ const AddToCartButton = ({ data }) => {
             const response = await Axios({
                 ...SummaryApi.addTocart,
                 data: {
-                    productId: data?.id
+                    productId: data?.id,
+                    //userId: userId
                 }
             })
 
