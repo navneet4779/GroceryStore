@@ -288,6 +288,12 @@ export async function savePaymentController(request,response){
             { where: { id: userId } }
         );
 
+        return response.json({
+            message: "Order created successfully.",
+            error: false,
+            success: true,
+        });
+
     } catch (error) {
         return response.status(500).json({
             message: error.message || "An error occurred while processing the order.",

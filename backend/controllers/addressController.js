@@ -49,7 +49,7 @@ export const getAddressController = async(request,response)=>{
         const userId = request.userId // middleware auth
 
         const data = await AddressModel.findAll({
-            where: { userId: userId },
+            where: { userId: userId,status: true }, // Fetch only active addresses
             order: [["createdAt", "DESC"]],
         });
 

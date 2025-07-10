@@ -54,8 +54,8 @@ const MyOrders = () => {
                     </span>
                   </p>
                   <p className="text-sm text-gray-600">
-                    Payment Status: <span className={`font-medium ${order?.paymentStatus === 'paid' ? 'text-blue-500' : 'text-yellow-500'}`}>
-                      {order?.paymentStatus || 'Pending'}
+                    Payment Status: <span className={`font-medium ${order?.payment_status == 'succeeded' ? 'text-blue-500' : 'text-yellow-500'}`}>
+                      {order?.payment_status == 'succeeded' ? 'Paid' : 'Pending'}
                     </span>
                   </p>
                   <p className="text-sm text-gray-600">
@@ -98,10 +98,10 @@ const MyOrders = () => {
                             </p>
                         </div>
                         </td>
-                        <td className="px-4 py-3">{DisplayPriceInRupees(order?.price || 0)}</td>
+                        <td className="px-4 py-3">{DisplayPriceInRupees(order?.subTotalAmt || 0)}</td>
                         <td className="px-4 py-3">{order?.quantity || 1}</td>
                         <td className="px-4 py-3">
-                        {DisplayPriceInRupees((order?.price || 0) * (order?.quantity || 1))}
+                        {DisplayPriceInRupees((order?.subTotalAmt || 0) * (order?.quantity || 1))}
                         </td>
                     </tr>
                     </tbody>
