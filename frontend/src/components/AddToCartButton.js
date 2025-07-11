@@ -26,6 +26,8 @@ const AddToCartButton = ({ data }) => {
             return;
         }
 
+        const userId = localStorage.getItem("userId")
+
         try {
             setLoading(true)
 
@@ -33,7 +35,7 @@ const AddToCartButton = ({ data }) => {
                 ...SummaryApi.addTocart,
                 data: {
                     productId: data?.id,
-                    //userId: userId
+                    userId: userId
                 }
             })
 

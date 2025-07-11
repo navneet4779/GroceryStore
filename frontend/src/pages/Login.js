@@ -100,9 +100,9 @@ const Login = () => {
                     return;
                 }
 
-                localStorage.setItem('accessToken', accessToken);
-                localStorage.setItem('refreshToken', refreshToken);
-                localStorage.setItem('userId', userId); // Store userId in localStorage
+                //localStorage.setItem('accessToken', accessToken);
+                //localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('userId', String(userId)); // Store userId in localStorage
 
                 // Fetch user details after successful login
                 const userDetails = await fetchUserDetails();

@@ -9,7 +9,7 @@ import { FaRegClock } from "react-icons/fa";
 const CardProduct = ({ data }) => {
   // console.log("CardProduct data:", data); // Log for debugging, use console.log or remove for prod
 
-  const imageUrl = (data?.image && data.image[0]) ? data.image[0] : 'https://via.placeholder.com/300x300.png?text=No+Image';
+  const imageUrl = (data?.image ) ? data.image : 'https://via.placeholder.com/300x300.png?text=No+Image';
   // Ensure data.name and data.id exist before creating URL to prevent errors
   const productNameForUrl = data?.name || 'unknown-product';
   const productIdForUrl = data?.id || 'unknown-id';
@@ -54,7 +54,7 @@ const CardProduct = ({ data }) => {
 
         {/* Product Unit */}
         <p className="text-[0.7rem] sm:text-xs text-gray-500 mb-1.5"> {/* Slightly smaller text */}
-          {data?.unit || 'N/A'}
+          {data?.unit ? `${data.unit} Unit` : 'N/A'}
         </p>
 
         {/* Price Section */}

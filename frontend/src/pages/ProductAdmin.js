@@ -35,6 +35,7 @@ const ProductAdminPage = () => {
             });
 
             const { data: responseData } = response;
+            console.log("Product Data Response:", responseData); // Debugging line to check response structure
             if (responseData.success) {
                 setTotalPageCount(responseData.totalNoPage || 1);
                 setProductData(responseData.data || []);
@@ -149,13 +150,13 @@ const ProductAdminPage = () => {
                         <div className='grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6'>
                             {productData.map((product) => (
                                 <div
-                                    key={product._id}
+                                    key={product.id}
                                     className='bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col group'
                                 >
                                     <div className="w-full aspect-square bg-slate-50 flex items-center justify-center overflow-hidden relative">
                                         <img
-                                            src={product?.image[0]}
-                                            alt={product?.name}
+                                            src={product.image.replace(/"/g, "")} // Ensure image is a string and remove quotes
+                                            alt={product.name}
                                             className='w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105'
                                             onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder-image.png"; }}
                                         />

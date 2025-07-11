@@ -33,8 +33,8 @@ export const getCartItemController = async (request, response) => {
 
 export const addToCartItemController = async (request, response) => {
     try {
-        const userId = 1;//request.userId;
-        const { productId } = request.body;
+        //const userId = 1;//request.userId;
+        const { productId, userId } = request.body;
 
         if (!productId) {
             return response.status(400).json({

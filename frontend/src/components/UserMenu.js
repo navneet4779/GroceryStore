@@ -7,6 +7,7 @@ import { logout as logoutAction } from '../store/userSlice'; // Renamed to avoid
 import toast from 'react-hot-toast';
 import AxiosToastError from '../utils/AxiosToastError'; // Assuming this utility exists
 import isAdmin from '../utils/isAdmin'; // Assuming this utility exists
+import { handleAddItemCart } from "../store/cartProduct";
 
 // Importing icons
 import {
@@ -40,6 +41,8 @@ const UserMenu = ({ close }) => {
           close();
         }
         dispatch(logoutAction());
+        dispatch(handleAddItemCart([])); // Clear cart on logout
+        // Clear local storage
         localStorage.clear();
         toast.success(response.data.message || 'Logged out successfully!');
         navigate('/');
