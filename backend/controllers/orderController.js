@@ -7,8 +7,8 @@ import Stripe from "../config/stripe.js";
 import Sequelize from 'sequelize'
 export async function CashOnDeliveryOrderController(request, response) {
     try {
-        //const userId = request.userId; // Auth middleware
-        const { list_items, totalAmt, addressId, subTotalAmt,userId } = request.body;
+        const userId = request.userId; // Auth middleware
+        const { list_items, totalAmt, addressId, subTotalAmt } = request.body;
 
         // Validate addressId
         if (!addressId) {
@@ -201,7 +201,7 @@ export async function paymentController(request,response){
         
 
         const params = {
-            amount : subTotalAmt * 1000, // Amount in paise
+            amount : subTotalAmt, // Amount in paise
             currency : 'usd',
             description : 'Order Payment',
             //confirm : true,

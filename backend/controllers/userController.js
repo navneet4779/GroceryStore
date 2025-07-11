@@ -123,6 +123,11 @@ export async function loginController(request, response) {
         const accessToken = await generatedAccessToken(user.id); // Use `id` for MySQL
         const refreshToken = await genertedRefreshToken(user.id); // Use `id` for MySQL
 
+        CartProduct.update(
+            { userId: user.id }, // Set the userId for the cart items
+            { where: { userId: null } } // Clear the user's cart
+        );
+
         // Update the user's last login date
         await UserModel.update(
             { last_login_date: new Date() },
@@ -137,6 +142,8 @@ export async function loginController(request, response) {
         };
         response.cookie("accessToken", accessToken, cookiesOption);
         response.cookie("refreshToken", refreshToken, cookiesOption);
+
+        
 
         // Return success response
         return response.json({
@@ -216,7 +223,7 @@ export async function logoutController(request,response){
         );
 
         CartProduct.destroy({
-            where: { userId: null } // Clear the user's cart
+            where: { userId: userId } // Clear the user's cart
         });
 
         return response.json({

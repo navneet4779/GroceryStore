@@ -26,6 +26,10 @@ const DisplayCartItem = ({ close }) => {
             return;
         }
         toast("Please Login to Continue");
+        navigate("/login");
+        if (close) {
+            close();
+        }
     };
 
     // Animation variants
