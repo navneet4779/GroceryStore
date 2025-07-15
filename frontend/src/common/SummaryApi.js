@@ -85,6 +85,14 @@ const SummaryApi = {
         url : "/api/order/save-payment",
         method : 'post'
     },
+    initiate_razorpay_order : {
+        url : "/api/order/initiate-razorpay-order",
+        method : 'post'
+    },
+    verify_razorpay_payment : {
+        url : "/api/order/verify-razorpay-payment",
+        method : 'post'
+    },
     disableAddress : {
         url : '/api/address/disable',
         method : 'delete'

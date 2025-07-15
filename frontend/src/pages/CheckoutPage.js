@@ -16,7 +16,7 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaCheckCircle, FaMapMarkerAlt, FaCreditCard, FaMoneyBillAlt } from 'react-icons/fa';
+import { FaPlus, FaCheckCircle, FaMapMarkerAlt, FaCreditCard, FaMoneyBillAlt, FaQrcode } from 'react-icons/fa';
 
 // Load Stripe key from env
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
@@ -149,6 +149,7 @@ const CheckoutPage = () => {
   const location = useLocation();
   const userId = localStorage.getItem('userId');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('none');
+  const [isProcessingUpi, setIsProcessingUpi] = useState(false);
 
   useEffect(() => {
     const firstValidAddressIndex = addressList.findIndex(address => address.status);
@@ -183,6 +184,124 @@ const CheckoutPage = () => {
       AxiosToastError(error);
     }
   };
+
+      const handleRazorpayUpiPayment = async () => {
+        if (selectAddress === null || selectAddress === undefined || addressList[selectAddress] === undefined) {
+            toast.error("Please select a delivery address first.");
+            return;
+        }
+        if (cartItemsList.length === 0) {
+            toast.error("Your cart is empty. Please add items to checkout.");
+            return;
+        }
+
+        setIsProcessingUpi(true);
+        toast.loading("Initiating UPI payment via Razorpay...");
+
+        try {
+            // 1. Call your backend to create a Razorpay Order
+            const orderResponse = await Axios({
+                ...SummaryApi.initiate_razorpay_order,
+                data: {
+                    amount: totalPrice, // Amount in Rupees, backend will convert to paise
+                    currency: "INR",
+                    list_items: cartItemsList,
+                    addressId: addressList[selectAddress]?.id,
+                    userId,
+                },
+            });
+
+            toast.dismiss();
+
+            if (!orderResponse.data.success || !orderResponse.data.orderId) {
+                toast.error(orderResponse.data.message || "Failed to create Razorpay order.");
+                setIsProcessingUpi(false);
+                return;
+            }
+
+            const { orderId, amount, currency } = orderResponse.data;
+
+            // 2. Initialize Razorpay Checkout
+            // Access window.Razorpay directly, NOT the imported 'Razorpay'
+            const options = {
+                key: process.env.REACT_APP_RAZORPAY_KEY_ID, // Your test/production Key ID from Razorpay Dashboard
+                amount: amount, // Amount in paise
+                currency: currency,
+                name: "Grocery Store", // Replace with your company name
+                description: "Payment for your order",
+                order_id: orderId, // This is the order ID created on your backend via Razorpay API
+                handler: async function (response) {
+                    // This function is called when the payment is successful on Razorpay's end
+                    toast.loading("Verifying payment...");
+                    try {
+                        const verifyResponse = await Axios({
+                            ...SummaryApi.verify_razorpay_payment,
+                            data: {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                list_items: cartItemsList, // Pass cart details for order creation/update on backend
+                                addressId: addressList[selectAddress]?.id,
+                                totalAmt: totalPrice,
+                                userId,
+                            },
+                        });
+                        toast.dismiss();
+                        if (verifyResponse.data.success) {
+                            toast.success("Payment successful and verified!");
+                            fetchCartItem?.();
+                            fetchOrder?.();
+                            navigate('/success', { state: { text: 'Payment' } });
+                        } else {
+                            toast.error(verifyResponse.data.message || "Payment verification failed!");
+                            navigate('/failure', { state: { text: 'Payment Failed', message: verifyResponse.data.message } });
+                        }
+                    } catch (verifyError) {
+                        AxiosToastError(verifyError);
+                        navigate('/failure', { state: { text: 'Payment Failed', message: "Error during payment verification." } });
+                    } finally {
+                         setIsProcessingUpi(false); // Ensure loading state is reset
+                    }
+                },
+                prefill: {
+                    name: "", // You can prefill user's name if available from context/redux
+                    email: "", // User's email
+                    contact: "", // User's contact number
+                },
+                notes: {
+                    address: addressList[selectAddress]?.address_line + ", " + addressList[selectAddress]?.city,
+                },
+                theme: {
+                    color: "#3399CC", // Customize Razorpay checkout theme color
+                },
+                modal: {
+                    ondismiss: () => {
+                        // This function is called when the user closes the Razorpay modal
+                        toast.error("Payment process cancelled by user.");
+                        setIsProcessingUpi(false);
+                    }
+                },
+            };
+
+            // Check if Razorpay script is loaded
+            if (typeof window.Razorpay === 'undefined') {
+                toast.error("Razorpay script not loaded. Please ensure it's added to index.html.");
+                setIsProcessingUpi(false);
+                return;
+            }
+
+            const rzp1 = new window.Razorpay(options); // <--- Use window.Razorpay
+            rzp1.open(); // Open the Razorpay checkout modal
+
+        } catch (err) {
+            AxiosToastError(err);
+            setIsProcessingUpi(false);
+            navigate('/failure', { state: { text: 'Payment Failed', message: "Failed to initiate Razorpay payment." } });
+        } finally {
+            // isProcessingUpi is set to false in handler or error blocks
+            // or if an initial error occurs before modal opens.
+        }
+    };
 
   return (
         <motion.section
@@ -287,6 +406,21 @@ const CheckoutPage = () => {
                             <span className='font-medium text-gray-700'>Pay Online (Credit/Debit Card)</span>
                         </label>
                         <label
+                            className={`border rounded-md p-4 flex items-center gap-3 cursor-pointer transition duration-200 ${selectedPaymentMethod === 'upi' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                        >
+                            <input
+                                type='radio'
+                                name='paymentMethod'
+                                value='upi'
+                                checked={selectedPaymentMethod === 'upi'}
+                                onChange={() => setSelectedPaymentMethod('upi')}
+                                className='form-radio h-5 w-5 text-green-500 focus:ring-green-500'
+                            />
+                            <FaQrcode className='text-xl text-green-500' />
+                            <span className='font-medium text-gray-700'>
+                              Pay using UPI</span>
+                        </label>
+                        <label
                             className={`border rounded-md p-4 flex items-center gap-3 cursor-pointer transition duration-200 ${selectedPaymentMethod === 'cod' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}`}
                         >
                             <input
@@ -322,6 +456,28 @@ const CheckoutPage = () => {
                             </Elements>
                         </motion.div>
                     )}
+
+                    {selectedPaymentMethod === 'upi' && (
+                            <motion.button
+                                key="upi-payment-button"
+                                className='w-full mt-4 py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-semibold flex items-center justify-center gap-2 shadow-sm transition duration-200
+                                            disabled:opacity-50 disabled:cursor-not-allowed'
+                                onClick={handleRazorpayUpiPayment}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                //disabled={!canSelectPayment || isProcessingUpi}
+                            >
+                                {isProcessingUpi ? (
+                                    <span>Processing UPI...</span>
+                                ) : (
+                                    <span>Pay {DisplayPriceInRupees(totalPrice)} with UPI</span>
+                                )}
+                              </motion.button>
+                        )}
 
                     {selectedPaymentMethod === 'cod' && (
                         <motion.button
