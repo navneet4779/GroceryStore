@@ -172,12 +172,13 @@ const CheckoutPage = () => {
       });
 
       const { data: responseData } = response;
-
+      //console.log(responseData.data[0].orderId);
       if (responseData.success) {
         toast.success(responseData.message);
         fetchCartItem?.();
         fetchOrder?.();
-        navigate('/success', { state: { text: 'Order' } });
+        //navigate('/success', { state: { orderId: responseData.orderId } });
+        navigate(`/success/${responseData.data[0].orderId}`);
       }
 
     } catch (error) {

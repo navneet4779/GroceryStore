@@ -10,21 +10,44 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux'; // Assuming Redux is set up elsewhere
 
-// Mock Data (replace with actual API calls or Redux state in a real application)
-const mockStats = [
-    { id: 1, title: "Total Revenue", value: "$125,670", change: "+12.5%", changeType: "positive", icon: <DollarSign className="w-6 h-6 text-green-500" /> },
-    { id: 2, title: "Today's Orders", value: "1,280", change: "+5.2%", changeType: "positive", icon: <ShoppingCart className="w-6 h-6 text-blue-500" /> },
-    { id: 3, title: "Pending Deliveries", value: "75", change: "-2.1%", changeType: "negative", icon: <Truck className="w-6 h-6 text-orange-500" /> },
-    { id: 4, title: "New Customers", value: "320", change: "+8.0%", changeType: "positive", icon: <UsersRound className="w-6 h-6 text-purple-500" /> },
-];
+
 
 
 // Main App Component (Admin Panel Layout)
 const AdminPanel = () => {
-    // Using useSelector to potentially fetch orders from Redux state.
-    // Note: The Redux store and 'orders' slice are not included in this code snippet.
-    const orders = useSelector(state => state.orders.order);
+   const orders = useSelector(state => state.orders.order);
     console.error("order Items", orders); // Log to check the value of orders from Redux
+     const totalRevenue = orders.reduce((acc, order) => {
+        return acc + (isNaN( order.totalAmt) ? 0 :  order.totalAmt);
+    }, 0);
+
+    // Format the total revenue into a user-friendly string
+    const formattedTotalRevenue = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+    }).format(totalRevenue);
+
+    const todayOrders = orders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        const today = new Date();
+        return orderDate.toDateString() === today.toDateString();
+    });
+    const todayOrdersCount = todayOrders.length; 
+   
+    const customerEmails = orders.map(order => order.user.email);
+    const uniqueCustomerEmails = [...new Set(customerEmails)]; // Get unique customer emails
+    const totalCustomers = uniqueCustomerEmails.length; // Count of unique customers
+
+
+
+    const total = formattedTotalRevenue;
+    const mockStats = [
+        { id: 1, title: "Total Revenue", value: total, change: "+12.5%", changeType: "positive", icon: <DollarSign className="w-6 h-6 text-green-500" /> },
+        { id: 2, title: "Today's Orders", value: todayOrdersCount, change: "+5.2%", changeType: "positive", icon: <ShoppingCart className="w-6 h-6 text-blue-500" /> },
+        { id: 3, title: "Pending Deliveries", value: "75", change: "-2.1%", changeType: "negative", icon: <Truck className="w-6 h-6 text-orange-500" /> },
+        { id: 4, title: "Total Customers", value: totalCustomers, change: "+8.0%", changeType: "positive", icon: <UsersRound className="w-6 h-6 text-purple-500" /> },
+    ];
 
     // State to manage the currently selected view in the admin panel (e.g., Dashboard, Orders, Products)
     const [activeView, setActiveView] = useState('Dashboard');
@@ -58,7 +81,7 @@ const AdminPanel = () => {
             case 'Dashboard':
                 // Pass the mock orders data to the DashboardView.
                 // In a real app, this data would likely come from Redux state or API calls.
-                return <DashboardView orders={orders} />;
+                return <DashboardView orders={orders} mockStats={mockStats} />;
             // Add cases for other views like 'Orders', 'Products', etc.
             // case 'Orders':
             //     return <OrdersView />;
@@ -129,7 +152,7 @@ const AdminPanel = () => {
 
 // Dashboard View Component
 // Displays key statistics and a list of recent orders.
-const DashboardView = ({ orders }) => ( // Accepts orders as a prop
+const DashboardView = ({ orders, mockStats }) => ( // Accepts orders and mockStats as props
     <div className="space-y-6"> {/* Vertical spacing between sections */}
         {/* Stats Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"> {/* Responsive grid */}
@@ -176,7 +199,7 @@ const DashboardView = ({ orders }) => ( // Accepts orders as a prop
                                 <td className="py-3 px-4 text-sm text-gray-700">{order.user.name}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700">{order.user.email}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700">{order.user.mobile}</td>
-                                <td className="py-3 px-4 text-sm text-gray-700">{order.createdAt}</td>
+                                <td className="py-3 px-4 text-sm text-gray-700">{new Date(order.createdAt).toLocaleString()}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700 text-center">{order.product_details}</td>
                                 <td className="py-3 px-4 text-sm text-gray-700 font-medium">{order.totalAmt}</td>
                                 <td className="py-3 px-4 text-sm">

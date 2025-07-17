@@ -5,11 +5,12 @@ import Axios from '../utils/Axios';
 import Loading from '../components/Loading';
 import NoData from '../components/NoData';
 import { IoSearchOutline } from "react-icons/io5";
-import { FaEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaPlus } from 'react-icons/fa'; // Added FaPlus
+import { FaEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaPlus } from 'react-icons/fa'; 
 import EditProductAdmin from '../components/EditProductAdmin';
 import CofirmBox from '../components/CofirmBox';
 import toast from 'react-hot-toast';
-import UploadProduct from '../components/UploadProduct'; // <--- Import the new modal component
+import UploadProduct from '../components/UploadProduct'; 
+import { pricewithDiscount } from "../utils/PriceWithDiscount";
 
 const ProductAdminPage = () => {
     const [productData, setProductData] = useState([]);
@@ -169,10 +170,10 @@ const ProductAdminPage = () => {
                                             ID: {product?.id ? product.id.toString().slice(-6) : "N/A"} {/* Convert id to string and handle missing id */}
                                         </p>
                                         <p className='text-sm text-green-600 font-semibold mb-2'>
-                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product?.sellingPrice)}
+                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(pricewithDiscount(product?.price, product?.discount || 0))}
                                         </p>
                                         <p className='text-xs text-slate-500 mb-3'>
-                                            Stock: <span className={`${product?.quantity > 0 ? 'text-green-700' : 'text-red-600'} font-medium`}>{product?.quantity > 0 ? product?.quantity : 'Out of Stock'}</span>
+                                            Stock: <span className={`${product?.stock > 0 ? 'text-green-700' : 'text-red-600'} font-medium`}>{product?.stock > 0 ? product?.stock : 'Out of Stock'}</span>
                                         </p>
                                         <div className='mt-auto flex items-center justify-between gap-2 pt-3 border-t border-slate-200'>
                                             <button
