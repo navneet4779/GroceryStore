@@ -99,14 +99,14 @@ const DisplayCartItem = ({ close }) => {
                                         >
                                             <div className='w-20 h-20 min-h-20 min-w-20 bg-gray-100 rounded flex items-center justify-center'>
                                                 <img
-                                                    src={item?.product?.image[0]}
+                                                    src={item?.product?.image || "https://via.placeholder.com/150"}
                                                     alt={item?.product?.name}
                                                     className='object-contain max-h-full max-w-full'
                                                 />
                                             </div>
                                             <div className='flex-1 text-sm'>
                                                 <p className='text-gray-800 font-medium line-clamp-2'>{item?.product?.name}</p>
-                                                <p className='text-gray-500 text-xs'>{item?.product?.unit}</p>
+                                                <p className='text-gray-500 text-xs'>{item?.product?.unit} units</p>
                                                 <p className='font-semibold text-gray-900'>
                                                     {DisplayPriceInRupees(pricewithDiscount(item?.product?.price, item?.product?.discount))}
                                                 </p>

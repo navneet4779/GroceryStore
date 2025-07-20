@@ -25,7 +25,7 @@ const footerSections = [
       { label: 'Contact Us', href: '/contact' },
       { label: 'FAQs', href: '/faq' },
       { label: 'Shipping & Returns', href: '/shipping-returns' },
-      { label: 'Track Your Order', href: '/track-order' },
+      { label: 'Track Your Order', href: '/success/:orderId' },
     ],
   },
   {

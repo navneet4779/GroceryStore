@@ -9,8 +9,8 @@ import { IoClose } from "react-icons/io5";
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
 import AxiosToastError from '../utils/AxiosToastError';
-import successAlert from '../utils/SuccessAlert';
-import { useEffect } from 'react';
+//import successAlert from '../utils/SuccessAlert';
+import toast from 'react-hot-toast';
 
 
 const AddFieldComponent = ({ value, onChange, submit, close, fieldNameLabel = "Field Name" }) => (
@@ -150,7 +150,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
       const { data: responseData } = response
 
       if (responseData.success) {
-        successAlert(responseData.message)
+        responseData.message && toast.success(responseData.message)
         if(close){
           close()
         }
