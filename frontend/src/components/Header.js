@@ -30,6 +30,8 @@ const Header = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
+          localStorage.setItem("lat", latitude);
+          localStorage.setItem("lon", longitude);
           setLocation({ lat: latitude, lng: longitude });
           getAddressFromCoords(latitude, longitude);
         },

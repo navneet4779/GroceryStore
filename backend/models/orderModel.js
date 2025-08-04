@@ -43,6 +43,16 @@ const OrderModel = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        tookanTaskId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: "",
+        },
+        deliveryStatus: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: "Pending",
+        },
         subTotalAmt: {
             type: DataTypes.FLOAT,
             allowNull: false,

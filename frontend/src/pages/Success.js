@@ -105,11 +105,12 @@ const Success = () => {
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [eta, setEta] = useState(null);
   const mapRef = useRef(null);
-
+  const lat = localStorage.getItem('lat');
+  const lon = localStorage.getItem('lon');
   const order = {
     deliveryStatus: 'On The Way',
     darkStoreLocation: { latitude: 28.7041, longitude: 77.1025 },
-    shippingAddress: { latitude: 28.5355, longitude: 77.3910 },
+    shippingAddress: { latitude: lat, longitude: lon },
     driverInitialLocation: { latitude: 28.7000, longitude: 77.1000 },
   };
 

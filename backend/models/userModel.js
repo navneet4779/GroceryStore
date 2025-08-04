@@ -3,6 +3,12 @@ import { sequelize } from '../config/connectDB.js';
 import AddressModel from './addressModel.js'; // Import the Address model
 
 const UserModel = sequelize.define('User', {
+
+    stripeCustomerID: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "",
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,

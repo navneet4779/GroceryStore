@@ -81,6 +81,14 @@ const SummaryApi = {
         url : "/api/order/checkout",
         method : 'post'
     },
+    createStripeCustomer : {
+        url : "/api/order/create-stripe-customer",
+        method : 'post'
+    },
+    getPaymentMethods : {
+        url : "/api/order/get-payment-methods",
+        method : 'post'
+    },
     save_payment : {
         url : "/api/order/save-payment",
         method : 'post'
