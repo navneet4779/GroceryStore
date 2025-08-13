@@ -1,17 +1,17 @@
 export const baseURL = process.env.REACT_APP_API_URL;
 console.log("Base URL:", baseURL);
 const SummaryApi = {
-    register : {
-        url : '/api/user/register',
-        method : 'post'
+    sendOtp: {
+        url: '/api/user/send-otp',
+        method: 'post'
     },
-    login : {
-        url : '/api/user/login',
-        method : 'post'
+    verifyOtp: {
+        url: '/api/user/verify-otp',
+        method: 'post'
     },
-    userDetails : {
-        url : '/api/user/user-details',
-        method : 'get'
+    userDetails: {
+        url: '/api/user/user-details',
+        method: 'get'
     },
     searchProduct : {
         url : '/api/product/search-product',

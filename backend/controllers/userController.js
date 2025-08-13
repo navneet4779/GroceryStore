@@ -2,70 +2,60 @@ import UserModel from '../models/userModel.js'
 import CartProduct  from "../models/cartproductModel.js";
 import bcryptjs from 'bcryptjs'
 import generatedAccessToken from '../utils/generatedAccessToken.js'
-import genertedRefreshToken from '../utils/generatedRefreshToken.js'
+import generatedRefreshToken from '../utils/generatedRefreshToken.js'
 import sendEmail from '../config/sendEmail.js'
 import forgotPasswordTemplate from '../utils/forgotPasswordTemplate.js'
 import verifyEmailTemplate from '../utils/verifyEmailTemplate.js'
 
-export async function registerUserController(request, response) {
+export async function sendOtpController(request, response) {    
     try {
-        const { name, email, password } = request.body;
+        const { email } = request.body;
 
-        // Validate input fields
-        if (!name || !email || !password) {
+        // Validate email
+        if (!email) {
             return response.status(400).json({
-                message: "Please provide name, email, and password",
+                message: "Email is required",
                 error: true,
                 success: false,
             });
         }
 
-        // Check if the user already exists
-        const user = await UserModel.findOne({
-            where: { email }, // Use Sequelize's `where` clause
+        // Find user by email
+        let user = await UserModel.findOne({ where: { email } });
+
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+
+        // Send OTP via email
+        await sendEmail({
+            sendTo: email,
+            subject: "Your OTP Code",
+            html: `<p>Your OTP code is: <strong>${otp}</strong></p>`,
         });
 
+        // If user exists, update OTP and expiry
         if (user) {
-            return response.status(400).json({
-                message: "Email is already registered",
-                error: true,
-                success: false,
+            user.login_otp = otp;
+            user.login_otp_expiry = otpExpiry;
+            await user.save();
+        } else {
+            // If user does not exist, create a new user with OTP
+            user = await UserModel.create({
+                email,
+                login_otp: otp,
+                login_otp_expiry: otpExpiry,
+                status: "Active",
             });
         }
 
-        // Hash the password
-        const salt = await bcryptjs.genSalt(10);
-        const hashPassword = await bcryptjs.hash(password, salt);
-
-        // Create the user payload
-        const payload = {
-            name,
-            email,
-            password: hashPassword,
-        };
-
-        // Save the new user to the database
-        const newUser = await UserModel.create(payload);
-
-        const VerifyEmailUrl = `${process.env.FRONTEND_URL}/verify-email?code=${newUser?.id}`
-
-        const verifyEmail = await sendEmail({
-            sendTo : email,
-            subject : "Verify email from Grocery Store",
-            html : verifyEmailTemplate({
-                name,
-                url : VerifyEmailUrl
-            })
-        })
-
-        return response.status(201).json({
-            message: "User registered successfully",
+        return response.status(200).json({
+            message: "OTP sent successfully",
             error: false,
             success: true,
-            data: newUser,
         });
     } catch (error) {
-        console.error("Error in registerUserController:", error.message);
+        console.error("Error in sendOtpController:", error.message);
         return response.status(500).json({
             message: error.message || "Internal Server Error",
             error: true,
@@ -75,66 +65,67 @@ export async function registerUserController(request, response) {
 }
 
 
-export async function loginController(request, response) {
-    try {
-        const { email, password } = request.body;
+export async function verifyOtpController(request, response) {
+    try{
+        const { email, otp } = request.body;
 
         // Validate input
-        if (!email || !password) {
+        if (!email || !otp) {
             return response.status(400).json({
-                message: "Provide email and password",
+                message: "Provide email and OTP",
                 error: true,
                 success: false,
             });
         }
 
-        // Find the user by email
+        // Find user by email
         const user = await UserModel.findOne({ where: { email } });
 
         if (!user) {
             return response.status(400).json({
-                message: "User not registered",
+                message: "User not found",
                 error: true,
                 success: false,
             });
         }
 
-        // Check if the user is active
-        if (user.status !== "Active") {
+        const currentTime = new Date().toISOString()
+
+        if(user.login_otp_expiry < currentTime  ){
             return response.status(400).json({
-                message: "Contact the Admin",
-                error: true,
-                success: false,
-            });
+                message : "Otp is expired",
+                error : true,
+                success : false
+            })
         }
 
-        // Compare the provided password with the hashed password in the database
-        const checkPassword = await bcryptjs.compare(password, user.password);
-
-        if (!checkPassword) {
+        // Check if OTP is valid
+        if (user.login_otp !== otp) {
             return response.status(400).json({
-                message: "Incorrect password",
+                message: "Invalid OTP",
                 error: true,
                 success: false,
             });
         }
 
-        // Generate access and refresh tokens
+        // OTP is valid, proceed with login
+        user.login_otp = null; // Clear login OTP
+        user.login_otp_expiry = null; // Clear login OTP expiry
+        await user.save();
+
         const accessToken = await generatedAccessToken(user.id); // Use `id` for MySQL
-        const refreshToken = await genertedRefreshToken(user.id); // Use `id` for MySQL
+        const refreshToken = await generatedRefreshToken(user.id); // Use `id` for MySQL
 
         CartProduct.update(
             { userId: user.id }, // Set the userId for the cart items
             { where: { userId: null } } // Clear the user's cart
         );
 
-        // Update the user's last login date
         await UserModel.update(
             { last_login_date: new Date() },
             { where: { id: user.id } }
         );
 
-        // Set cookies for the tokens
         const cookiesOption = {
             httpOnly: true,
             secure: true,
@@ -143,9 +134,6 @@ export async function loginController(request, response) {
         response.cookie("accessToken", accessToken, cookiesOption);
         response.cookie("refreshToken", refreshToken, cookiesOption);
 
-        
-
-        // Return success response
         return response.json({
             message: "Login successful",
             error: false,
@@ -157,15 +145,14 @@ export async function loginController(request, response) {
             },
         });
     } catch (error) {
-        // Handle errors
+        console.error("Error in verifyOtpController:", error.message);
         return response.status(500).json({
-            message: error.message || error,
+            message: error.message || "Internal Server Error",
             error: true,
             success: false,
         });
     }
 }
-
 
 
 export async function userDetails(request, response) {

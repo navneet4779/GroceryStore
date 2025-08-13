@@ -11,10 +11,8 @@ const UserModel = sequelize.define('User', {
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: { msg: "Provide name" },
-        },
+        allowNull: true,
+        defaultValue: "",
     },
     email: {
         type: DataTypes.STRING,
@@ -22,13 +20,6 @@ const UserModel = sequelize.define('User', {
         unique: true,
         validate: {
             isEmail: { msg: "Provide a valid email" },
-        },
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: { msg: "Provide password" },
         },
     },
     avatar: {
@@ -67,11 +58,11 @@ const UserModel = sequelize.define('User', {
         type: DataTypes.JSON, // Use JSON to store complex data like arrays
         defaultValue: [],
     },
-    forgot_password_otp: {
+    login_otp: {
         type: DataTypes.STRING,
         defaultValue: null,
     },
-    forgot_password_expiry: {
+    login_otp_expiry: {
         type: DataTypes.DATE,
         defaultValue: null,
     },
