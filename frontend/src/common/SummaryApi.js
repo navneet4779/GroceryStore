@@ -109,18 +109,6 @@ const SummaryApi = {
         url : '/api/product/get-pruduct-by-category-and-subcategory',
         method : 'post'
     },
-    forgot_password : {
-        url : "/api/user/forgot-password",
-        method : 'put'
-    },
-    forgot_password_otp_verification : {
-        url : 'api/user/verify-forgot-password-otp',
-        method : 'put'
-    },
-    resetPassword : {
-        url : "/api/user/reset-password",
-        method : 'put'
-    },
     uploadImage : {
         url : '/api/file/upload',
         method : 'post'

@@ -43,8 +43,8 @@ const UserModel = sequelize.define('User', {
         defaultValue: null,
     },
     status: {
-        type: DataTypes.ENUM("Active", "Inactive", "Suspended"),
-        defaultValue: "Active",
+        type: DataTypes.ENUM("Active", "Inactive", "Suspended", "Pending"),
+        defaultValue: "Pending",
     },
     address_details: {
         type: DataTypes.JSON, // Use JSON to store complex data like arrays

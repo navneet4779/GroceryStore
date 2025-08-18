@@ -4,8 +4,7 @@ import bcryptjs from 'bcryptjs'
 import generatedAccessToken from '../utils/generatedAccessToken.js'
 import generatedRefreshToken from '../utils/generatedRefreshToken.js'
 import sendEmail from '../config/sendEmail.js'
-import forgotPasswordTemplate from '../utils/forgotPasswordTemplate.js'
-import verifyEmailTemplate from '../utils/verifyEmailTemplate.js'
+import loginOtpTemplate from '../utils/loginOtpTemplate.js'
 
 export async function sendOtpController(request, response) {    
     try {
@@ -31,7 +30,7 @@ export async function sendOtpController(request, response) {
         await sendEmail({
             sendTo: email,
             subject: "Your OTP Code",
-            html: `<p>Your OTP code is: <strong>${otp}</strong></p>`,
+            html: loginOtpTemplate({ otp }),
         });
 
         // If user exists, update OTP and expiry
@@ -45,7 +44,7 @@ export async function sendOtpController(request, response) {
                 email,
                 login_otp: otp,
                 login_otp_expiry: otpExpiry,
-                status: "Active",
+                status: "Pending",
             });
         }
 
@@ -111,6 +110,8 @@ export async function verifyOtpController(request, response) {
         // OTP is valid, proceed with login
         user.login_otp = null; // Clear login OTP
         user.login_otp_expiry = null; // Clear login OTP expiry
+        user.last_login_date = new Date(); // Update last login date
+        user.status = "Active"; // Set user status to Active
         await user.save();
 
         const accessToken = await generatedAccessToken(user.id); // Use `id` for MySQL
@@ -119,11 +120,6 @@ export async function verifyOtpController(request, response) {
         CartProduct.update(
             { userId: user.id }, // Set the userId for the cart items
             { where: { userId: null } } // Clear the user's cart
-        );
-
-        await UserModel.update(
-            { last_login_date: new Date() },
-            { where: { id: user.id } }
         );
 
         const cookiesOption = {
@@ -319,201 +315,6 @@ export async function refreshToken(request,response){
             }
         })
 
-
-    } catch (error) {
-        return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
-    }
-}
-
-export async function forgotPasswordController(request, response) {
-    try {
-        const { email } = request.body;
-
-        // Check if the email is provided
-        if (!email) {
-            return response.status(400).json({
-                message: "Please provide an email address",
-                error: true,
-                success: false,
-            });
-        }
-
-        // Find the user by email
-        const user = await UserModel.findOne({
-            where: { email },
-        });
-
-        if (!user) {
-            return response.status(400).json({
-                message: "Email not registered",
-                error: true,
-                success: false,
-            });
-        }
-
-        // Generate OTP and expiry time
-        const otp = Math.floor(Math.random() * 900000) + 100000;
-        const expireTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
-
-        // Update the user's forgot password OTP and expiry in the database
-        await UserModel.update(
-            {
-                forgot_password_otp: otp,
-                forgot_password_expiry: expireTime,
-            },
-            {
-                where: { id: user.id },
-            }
-        );
-
-        // Send the OTP to the user's email
-        await sendEmail({
-            sendTo: email,
-            subject: "Forgot Password - Grocery Store",
-            html: forgotPasswordTemplate({
-                name: user.name,
-                otp: otp,
-            }),
-        });
-
-        return response.json({
-            message: "Check your email for the OTP",
-            error: false,
-            success: true,
-        });
-    } catch (error) {
-        console.error("Error in forgotPasswordController:", error.message);
-        return response.status(500).json({
-            message: error.message || "Internal Server Error",
-            error: true,
-            success: false,
-        });
-    }
-}
-
-
-export async function verifyForgotPasswordOtp(request,response){
-    try {
-        const { email , otp }  = request.body
-
-        if(!email || !otp){
-            return response.status(400).json({
-                message : "Provide required field email, otp.",
-                error : true,
-                success : false
-            })
-        }
-
-        const user = await UserModel.findOne({
-            where: { email },
-        });
-
-        if(!user){
-            return response.status(400).json({
-                message : "Email not available",
-                error : true,
-                success : false
-            })
-        }
-
-        const currentTime = new Date().toISOString()
-
-        if(user.forgot_password_expiry < currentTime  ){
-            return response.status(400).json({
-                message : "Otp is expired",
-                error : true,
-                success : false
-            })
-        }
-
-        if(otp !== user.forgot_password_otp){
-            return response.status(400).json({
-                message : "Invalid otp",
-                error : true,
-                success : false
-            })
-        }
-
-        //if otp is not expired
-        //otp === user.forgot_password_otp
-
-        const updateUser = await UserModel.update(
-            {
-                forgot_password_otp: "", // Clear the OTP
-                forgot_password_expiry: "", // Clear the expiry
-            },
-            {
-                where: { id: user.id }, // Use the user's ID to find the record
-            }
-        );
-        
-        return response.json({
-            message : "Verify otp successfully",
-            error : false,
-            success : true
-        })
-
-    } catch (error) {
-        return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
-    }
-}
-
-
-export async function resetpassword(request,response){
-    try {
-        const { email , newPassword, confirmPassword } = request.body 
-
-        if(!email || !newPassword || !confirmPassword){
-            return response.status(400).json({
-                message : "provide required fields email, newPassword, confirmPassword"
-            })
-        }
-
-        const user = await UserModel.findOne({
-            where: { email },
-        });
-
-        if(!user){
-            return response.status(400).json({
-                message : "Email is not available",
-                error : true,
-                success : false
-            })
-        }
-
-        if(newPassword !== confirmPassword){
-            return response.status(400).json({
-                message : "newPassword and confirmPassword must be same.",
-                error : true,
-                success : false,
-            })
-        }
-
-        const salt = await bcryptjs.genSalt(10)
-        const hashPassword = await bcryptjs.hash(newPassword,salt)
-
-        const update = await UserModel.update(
-            {
-                password: hashPassword, // Update the password
-            },
-            {
-                where: { id: user.id }, // Use the user's ID to find the record
-            }
-        );
-
-        return response.json({
-            message : "Password updated successfully.",
-            error : false,
-            success : true
-        })
 
     } catch (error) {
         return response.status(500).json({
