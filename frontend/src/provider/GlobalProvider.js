@@ -23,8 +23,15 @@ const GlobalProvider = ({children}) => {
     
     const fetchCartItem = async()=>{
         try {
+          let userId = null;
+          if (localStorage.getItem("userId")) {
+            userId = localStorage.getItem("userId");
+          }
           const response = await Axios({
-            ...SummaryApi.getCartItem
+            ...SummaryApi.getCartItem,
+            data : {
+              userId : userId
+            }
           })
           const { data : responseData } = response
           if(responseData.success){
@@ -63,7 +70,7 @@ const GlobalProvider = ({children}) => {
           const response = await Axios({
             ...SummaryApi.deleteCartItem,
             data : {
-              _id : cartId
+              id : cartId
             }
           })
           const { data : responseData} = response

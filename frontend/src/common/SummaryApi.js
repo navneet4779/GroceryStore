@@ -31,7 +31,7 @@ const SummaryApi = {
     },
     getCartItem : {
         url : '/api/cart/get',
-        method : 'get'
+        method : 'post'
     },
     addTocart : {
         url : "/api/cart/create",

@@ -1,163 +1,119 @@
-import CartProduct  from "../models/cartproductModel.js"; // Sequelize model for CartProduct
-import Product  from "../models/productModel.js"; // Sequelize model for Product
-import CartProductModel from "../models/cartproductModel.js"; // Sequelize model for CartProduct
+import CartProduct from "../models/cartproductModel.js";
+import Product from "../models/productModel.js";
+
+// Helper function for consistent error responses
+const sendErrorResponse = (response, status, message) => {
+    return response.status(status).json({
+        message: message,
+        error: true,
+        success: false,
+    });
+};
+
+// Helper function for consistent success responses
+const sendSuccessResponse = (response, data, message) => {
+    return response.json({
+        data: data,
+        message: message,
+        error: false,
+        success: true,
+    });
+};
 
 export const getCartItemController = async (request, response) => {
     try {
-        //const userId = request.userId;
-
+        const { userId } = request.body;
         // Fetch cart items for the user and include product details
         const cartItems = await CartProduct.findAll({
-            //where: { userId: userId },
-            include: [
-                {
-                    model: Product,
-                    as: 'product', // Alias for the relationship
-                },
-            ],
+            where: { userId },
+            include: [{
+                model: Product,
+                as: 'product',
+            }],
         });
+        
+        return sendSuccessResponse(response, cartItems, "Cart items fetched successfully");
 
-        return response.json({
-            data: cartItems,
-            error: false,
-            success: true,
-        });
     } catch (error) {
-        return response.status(500).json({
-            message: error.message || error,
-            error: true,
-            success: false,
-        });
+        return sendErrorResponse(response, 500, error.message || "Internal server error");
     }
 };
 
 export const addToCartItemController = async (request, response) => {
     try {
-        //const userId = 1;//request.userId;
         const { productId, userId } = request.body;
 
         if (!productId) {
-            return response.status(400).json({
-                message: "Provide productId",
-                error: true,
-                success: false,
-            });
+            return sendErrorResponse(response, 400, "Provide productId");
         }
 
-        // Check if the item already exists in the cart
-        const checkItemCart = await CartProduct.findOne({
-            where: {
-                userId: userId,
-                productId: productId,
-            },
+        // Check if the item already exists in the cart to prevent duplicates
+        const existingCartItem = await CartProduct.findOne({
+            where: { userId, productId },
         });
 
-        if (checkItemCart) {
-            return response.status(400).json({
-                message: "Item already in cart",
-                error: true,
-                success: false,
-            });
+        if (existingCartItem) {
+            return sendErrorResponse(response, 400, "Item already in cart");
         }
 
-        // Add the item to the cart
-        const cartItem = await CartProduct.create({
+        // Add the item to the cart with a quantity of 1
+        const newCartItem = await CartProduct.create({
             quantity: 1,
-            userId: userId,
-            productId: productId,
+            userId,
+            productId,
         });
 
-        return response.json({
-            data: cartItem,
-            message: "Item added successfully",
-            error: false,
-            success: true,
-        });
+        return sendSuccessResponse(response, newCartItem, "Item added successfully");
+
     } catch (error) {
-        return response.status(500).json({
-            message: error.message || "Internal server error",
-            error: true,
-            success: false,
-        });
+        return sendErrorResponse(response, 500, error.message || "Internal server error");
     }
 };
 
-export const updateCartItemQtyController = async(request,response)=>{
+export const updateCartItemQtyController = async (request, response) => {
     try {
-        //const userId = request.userId 
-        const { id,qty } = request.body
+        const { id, qty } = request.body;
 
-        if(!id ||  !qty){
-            return response.status(400).json({
-                message : "provide _id, qty"
-            })
+        if (!id || !qty) {
+            return sendErrorResponse(response, 400, "Provide id and qty");
         }
 
         // Update the quantity of the cart item
-        const updateCartItem = await CartProduct.update(
+        const [rowsAffected] = await CartProduct.update(
             { quantity: qty },
-            {
-                where: {
-                    id: id,
-                    //userId: userId,
-                },
-            }
+            { where: { id } }
         );
 
-        if (updateCartItem[0] === 0) {
-            return response.status(404).json({
-                message: "Cart item not found",
-                error: true,
-                success: false,
-            });
+        if (rowsAffected === 0) {
+            return sendErrorResponse(response, 404, "Cart item not found or no change in quantity");
         }
 
-        return response.json({
-            message: "Cart item updated successfully",
-            success: true,
-            error: false,
-        });
+        return sendSuccessResponse(response, null, "Cart item updated successfully");
+
     } catch (error) {
-        return response.status(500).json({
-            message: error.message || "Internal server error",
-            error: true,
-            success: false,
-        });
+        return sendErrorResponse(response, 500, error.message || "Internal server error");
     }
 };
 
-export const deleteCartItemQtyController = async(request,response)=>{
+export const deleteCartItemController = async (request, response) => {
     try {
-      //const userId = request.userId // middleware
-      const { _id } = request.body 
-      
-      if(!_id){
-        return response.status(400).json({
-            message : "Provide _id",
-            error : true,
-            success : false
-        })
-      }
+        const { id } = request.body; // Standardized variable name to 'id'
 
-      const deleteCartItem = await CartProductModel.destroy({
-        where: {
-            id: _id,
-            //userId: userId,
-        },
+        if (!id) {
+            return sendErrorResponse(response, 400, "Provide id");
+        }
+
+        const rowsDeleted = await CartProduct.destroy({
+            where: { id },
         });
+        
+        if (rowsDeleted === 0) {
+            return sendErrorResponse(response, 404, "Cart item not found");
+        }
 
-      return response.json({
-        message : "Item removed successfully",
-        error : false,
-        success : true,
-        data : deleteCartItem
-      })
+        return sendSuccessResponse(response, null, "Item removed successfully");
 
     } catch (error) {
-        return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
+        return sendErrorResponse(response, 500, error.message || "Internal server error");
     }
-}
+};
