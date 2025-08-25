@@ -65,6 +65,14 @@ const SummaryApi = {
         url : '/api/order/order-list',
         method : 'get'
     },
+    getOrderDetailsUsingOrderId : {
+        url : '/api/order/get-order-details',
+        method : 'post'
+    },
+    getOrderTrackingDetailsUsingOrderId: {
+        url : '/api/order/get-order-tracking-details',
+        method : 'post'
+    },
     refreshToken : {
         url : 'api/user/refresh-token',
         method : 'post'

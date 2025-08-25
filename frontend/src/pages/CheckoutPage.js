@@ -46,7 +46,7 @@ const StripePaymentForm = ({ cartItemsList, addressList, selectAddress, totalPri
 
     const saveOrder = async (stripeId, amount) => {
         try {
-            await Axios({
+            const response = await Axios({
                 ...SummaryApi.save_payment,
                 data: {
                     stripeId,
@@ -56,11 +56,12 @@ const StripePaymentForm = ({ cartItemsList, addressList, selectAddress, totalPri
                     addressId: addressList[selectAddress]?.id,
                 },
             });
-
+            const {data: responseData} = response;
             toast.success('Payment successful!');
             fetchCartItem?.();
             fetchOrder?.();
-            navigate('/success', { state: { text: 'Payment' } });
+            console.log(responseData.data[0].orderId);
+            navigate(`/success/${responseData.data[0].orderId}`);
         } catch (err) {
             AxiosToastError(err);
         }
@@ -388,7 +389,7 @@ const CheckoutPage = () => {
                             toast.success("Payment successful and verified!");
                             fetchCartItem?.();
                             fetchOrder?.();
-                            navigate('/success', { state: { text: 'Payment' } });
+                            navigate(`/success/${verifyResponse.data.data[0].orderId}`);
                         } else {
                             toast.error(verifyResponse.data.message || "Payment verification failed!");
                             navigate('/failure', { state: { text: 'Payment Failed', message: verifyResponse.data.message } });

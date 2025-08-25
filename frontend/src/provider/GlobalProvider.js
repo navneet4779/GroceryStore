@@ -14,7 +14,7 @@ export const GlobalContext = createContext(null)
 export const useGlobalContext = ()=> useContext(GlobalContext)
 
 const GlobalProvider = ({children}) => {
-     const dispatch = useDispatch()
+    const dispatch = useDispatch()
     const cartItem = useSelector(state => state.cartItem.cart)
     const user = useSelector(state => state?.user)
     const [totalQty,setTotalQty] = useState(0)

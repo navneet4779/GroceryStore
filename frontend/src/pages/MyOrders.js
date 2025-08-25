@@ -98,10 +98,10 @@ const MyOrders = () => {
                             </p>
                         </div>
                         </td>
-                        <td className="px-4 py-3">{DisplayPriceInRupees(order?.subTotalAmt || 0)}</td>
+                        <td className="px-4 py-3">{DisplayPriceInRupees((order?.subTotalAmt / (order?.quantity || 1)) || 0)}</td>
                         <td className="px-4 py-3">{order?.quantity || 1}</td>
                         <td className="px-4 py-3">
-                        {DisplayPriceInRupees((order?.subTotalAmt || 0) * (order?.quantity || 1))}
+                        {DisplayPriceInRupees((order?.subTotalAmt || 0))}
                         </td>
                     </tr>
                     </tbody>

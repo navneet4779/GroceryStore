@@ -16,6 +16,7 @@ async function saveOrderToDatabase({ userId, list_items, paymentId = "", payment
         userId: userId,
         orderId: orderId,
         productId: el.product.id,
+        quantity: el.quantity || 1, // Default to 1 if not provided
         product_details: JSON.stringify({
             name: el.product.name,
             image: el.product.image,
@@ -37,21 +38,30 @@ async function saveOrderToDatabase({ userId, list_items, paymentId = "", payment
             latitude: 28.6256,
             longitude: 77.3824
         });
+        const user = await UserModel.findByPk(userId);
         const darkStore = getDarkStoreInfo();
         const tookanApiUrl = 'https://api.tookanapp.com/v2/create_task';
         const tookanPayload = {
             api_key: process.env.TOOKAN_API_KEY,
-            order_id: generatedOrder[0].id.toString(),
+            order_id: generatedOrder[0].orderId.toString(),
+            team_id:"",
+            auto_assignment: 1,
             job_description: `Delivery for Order #${generatedOrder[0].id}. Items: ${list_items.map(item => item.product.name).join(', ')}`,
-            job_pickup_phone: '8429656207',
+            job_pickup_phone: '+918429656207',
+            job_pickup_name: 'Dark Store',
             job_pickup_address: darkStore.address,
             job_pickup_latitude: darkStore.latitude,
             job_pickup_longitude: darkStore.longitude,
             job_pickup_datetime: new Date(Date.now()),
+            customer_email : user.email,
+            customer_username : user.name,
+            customer_phone : user.mobile,
+            customer_address: "Dolphin Public School Ghaziabaad 201009",
+            latitude : 28.62594,
+            longitude : 77.459704,
             job_delivery_datetime: new Date(Date.now() + 10 * 60 * 1000),
-            auto_assignment: 1,
             has_pickup: 1,
-            has_delivery: 0,
+            has_delivery: 1,
             layout_type: 0,
             tracking_link: 1,
             timezone: 300,
@@ -62,13 +72,16 @@ async function saveOrderToDatabase({ userId, list_items, paymentId = "", payment
             notify: 1,
             tags: "",
             geofence: 0,
+            ride_type: 0,
         };
-        const tookanResponse = await axios.post(tookanApiUrl, tookanPayload);
 
+        const tookanResponse = await axios.post(tookanApiUrl, tookanPayload);
+        console.log('Tookan Response:', tookanResponse);
         if (tookanResponse.data.status === 200) {
             // Update the first order record with Tookan info
             generatedOrder[0].tookanTaskId = tookanResponse.data.data.job_id;
             generatedOrder[0].deliveryStatus = 'Assigned';
+            generatedOrder[0].trackingUrl = tookanResponse.data.data.delivery_tracing_link;
             await generatedOrder[0].save();
         } else {
             generatedOrder[0].deliveryStatus = 'Tookan Assignment Failed';
@@ -435,6 +448,7 @@ export async function savePaymentController(request, response) {
             message: "Order created successfully.",
             error: false,
             success: true,
+            data: generatedOrder
         });
 
     } catch (error) {
@@ -502,7 +516,7 @@ export async function verifyRazorpayPaymentController(request, response) {
     if (digest === razorpay_signature) {
         try {
             // Save the order details in the database
-            await saveOrderToDatabase({
+            const generatedOrder = await saveOrderToDatabase({
                 userId,
                 list_items,
                 paymentId: razorpay_payment_id,
@@ -529,12 +543,95 @@ export async function verifyRazorpayPaymentController(request, response) {
             // Remove items from the cart
             await CartProductModel.destroy({ where: { userId: userId } });
 
-            response.status(200).json({ success: true, message: "Payment verified successfully and order placed!" });
+            response.status(200).json({ success: true, message: "Payment verified successfully and order placed!", data: generatedOrder });
 
         } catch (error) {
             response.status(500).json({ success: false, message: "Payment verified, but failed to save order." });
         }
     } else {
         response.status(400).json({ success: false, message: "Invalid payment signature." });
+    }
+}
+
+export async function getOrderDetailsUsingOrderIdController(request,response){
+    try {
+        const orderId = request.body.orderId // order id
+
+        const order = await OrderModel.findOne({
+            where: { orderId: orderId },
+        });
+
+        return response.json({
+            message : "order details",
+            data : order,
+            error : false,
+            success : true
+        })
+    } catch (error) {
+        return response.status(500).json({
+            message : error.message || error,
+            error : true,
+            success : false
+        })
+    }
+}
+
+export async function getOrderTrackingDetailsUsingOrderIdController(request, response) {
+    try {
+        const orderId = request.body.orderId;
+
+        const order = await OrderModel.findOne({
+            where: { orderId: orderId },
+        });
+
+        if (!order || !order.tookanTaskId) {
+            return response.status(404).json({
+                message: "Order or Tookan Task ID not found",
+                error: true,
+                success: false
+            });
+        }
+
+        const tookanApiUrl = 'https://api.tookanapp.com/v2/get_job_details';
+        const jobId = Number(order.tookanTaskId);
+        const tookanPayload = {
+            api_key: process.env.TOOKAN_API_KEY,
+            job_ids: [jobId, jobId + 1], // original and next job id
+            include_task_history: 0,
+            job_additional_info: 1,
+            include_job_report: 0
+        };
+
+        const tookanResponse = await axios.post(tookanApiUrl, tookanPayload);
+        let fleetID = null;
+        let fleet_location = null;
+        if (tookanResponse.data) {
+            fleetID = tookanResponse.data.data[1].fleet_id;
+        }
+        if (fleetID) {
+            const tookanApiUrl = 'https://api.tookanapp.com/v2/get_fleet_location';
+            const tookanPayload = {
+                api_key: process.env.TOOKAN_API_KEY,
+                fleet_id: fleetID
+            };
+
+            const fleetResponse = await axios.post(tookanApiUrl, tookanPayload);
+            if (fleetResponse.data) {
+                fleet_location = fleetResponse.data.data;
+            }
+        }
+
+        return response.json({
+            message: "order tracking details",
+            data: { order, fleet_location },
+            error: false,
+            success: true
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
     }
 }

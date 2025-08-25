@@ -14,6 +14,7 @@ import AdminPanel from "../pages/AdminPanel";
 import CategoryPage from "../pages/CategoryPage";
 import SubCategoryPage from "../pages/SubCategoryPage";
 import ProductAdmin from "../pages/ProductAdmin";
+import TrackOrder from  "../pages/TrackOrders";
 
 
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
             {
                 path: "success/:orderId",
                 element: <Success />,
+            },
+            {
+                path: "track/:orderId",
+                element: <TrackOrder />,
             },
             {
                 path: "dashboard",

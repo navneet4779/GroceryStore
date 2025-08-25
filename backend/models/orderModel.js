@@ -53,10 +53,20 @@ const OrderModel = sequelize.define(
             allowNull: true,
             defaultValue: "Pending",
         },
+        trackingUrl: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: "",
+        },
         subTotalAmt: {
             type: DataTypes.FLOAT,
             allowNull: false,
             defaultValue: 0,
+        },
+        quantity: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 1,
         },
         totalAmt: {
             type: DataTypes.FLOAT,

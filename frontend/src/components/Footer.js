@@ -5,36 +5,17 @@ import {
   FaTwitter,
   FaYoutube,
 } from 'react-icons/fa';
-import {
-  MdEmail,
-  MdLocalPhone,
-  MdLocationPin,
-} from 'react-icons/md';
+import { SiAppstore, SiGoogleplay } from 'react-icons/si';
+import logo from "../assets/logo.png";
 
-const footerSections = [
-  {
-    title: 'Quick Links',
-    links: [
-      { label: 'Home', href: '/' },
-      { label: 'About Us', href: '/about' },
-    ],
-  },
-  {
-    title: 'Support',
-    links: [
-      { label: 'Contact Us', href: '/contact' },
-      { label: 'FAQs', href: '/faq' },
-      { label: 'Shipping & Returns', href: '/shipping-returns' },
-      { label: 'Track Your Order', href: '/success/:orderId' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy Policy', href: '/privacy-policy' },
-      { label: 'Terms of Service', href: '/terms-of-service' },
-    ],
-  },
+// Renamed and streamlined footer sections
+const footerLinks = [
+  { label: 'About Us', href: '/about' },
+  { label: 'Contact Us', href: '/contact' },
+  { label: 'FAQs', href: '/faq' },
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Terms of Service', href: '/terms-of-service' },
+  { label: 'Track Your Order', href: '/success/:orderId' },
 ];
 
 const socialLinks = [
@@ -51,16 +32,16 @@ const socialLinks = [
     colorClass: 'hover:text-pink-500',
   },
   {
-    label: 'LinkedIn',
-    icon: <FaLinkedinIn />,
-    href: 'https://linkedin.com/yourcompany',
-    colorClass: 'hover:text-blue-700',
-  },
-  {
     label: 'Twitter',
     icon: <FaTwitter />,
     href: 'https://twitter.com/yourprofile',
     colorClass: 'hover:text-sky-500',
+  },
+  {
+    label: 'LinkedIn',
+    icon: <FaLinkedinIn />,
+    href: 'https://linkedin.com/yourcompany',
+    colorClass: 'hover:text-blue-700',
   },
   {
     label: 'YouTube',
@@ -70,66 +51,70 @@ const socialLinks = [
   },
 ];
 
+const appDownloadLinks = [
+  {
+    label: 'App Store',
+    icon: <SiAppstore />,
+    href: 'https://www.apple.com/app-store/',
+  },
+  {
+    label: 'Google Play',
+    icon: <SiGoogleplay />,
+    href: 'https://play.google.com/store/apps',
+  },
+];
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-800 text-slate-300 border-t border-slate-700">
-      <div className="container mx-auto px-4 py-10 md:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Brand and Contact Info */}
-          <div className="space-y-4">
-            <a href="/" className="text-2xl font-bold text-white" aria-label="Homepage">
-              YourLogo
+    <footer className="bg-slate-900 text-slate-400">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        {/* Top Section: Logo, Tagline, App Downloads */}
+        <div className="flex flex-col items-center justify-between md:flex-row gap-8 pb-8 mb-8 border-b border-slate-700">
+          <div className="text-center md:text-left">
+            <a href="/" className="flex items-center gap-2" aria-label="Homepage">
+              <img src={logo} alt="Logo" className="h-12" />
             </a>
-            <p className="text-sm text-slate-400">
-              Your trusted source for high-quality products and amazing experiences.
-            </p>
-            <div className="space-y-2 text-sm">
-              <a
-                href="mailto:info@example.com"
-                className="flex items-center gap-2 hover:text-primary-300 transition-colors"
-              >
-                <MdEmail className="text-primary-400" /> info@example.com
-              </a>
-              <a
-                href="tel:+1234567890"
-                className="flex items-center gap-2 hover:text-primary-300 transition-colors"
-              >
-                <MdLocalPhone className="text-primary-400" /> +1 (234) 567-890
-              </a>
-              <p className="flex items-start gap-2">
-                <MdLocationPin className="text-primary-400 mt-1" /> 123 Main Street, Anytown, USA
-              </p>
-            </div>
+            <p className="text-sm">Get your groceries delivered in minutes.</p>
           </div>
-
-          {/* Navigation Sections */}
-          {footerSections.map((section) => (
-            <div key={section.title} className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">{section.title}</h3>
-              <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm hover:text-primary-300 hover:underline transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            {appDownloadLinks.map((app) => (
+              <a
+                key={app.label}
+                href={app.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-slate-800 text-white flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-slate-700 hover:bg-slate-700 transition-colors"
+                aria-label={`Download on ${app.label}`}
+              >
+                <div className="text-xl">{app.icon}</div>
+                <div>
+                  <span className="block text-xs text-slate-400">Download on the</span>
+                  <span className="font-semibold">{app.label}</span>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-8 pt-8 border-t border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-slate-400 text-center md:text-left">
-            &copy; {currentYear} GroceryStore. All Rights Reserved.
-          </p>
-          <div className="flex items-center gap-3 justify-center">
+        {/* Middle Section: Navigation and Social Links */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 pb-8 mb-8 border-b border-slate-700">
+          <ul className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-sm">
+            {footerLinks.map((link) => (
+              <li key={link.label}>
+                <a
+                  href={link.href}
+                  className="hover:text-white hover:underline transition-colors"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          
+          <div className="flex items-center gap-3 justify-center md:justify-end">
             {socialLinks.map((social) => (
               <a
                 key={social.label}
@@ -137,12 +122,17 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Follow us on ${social.label}`}
-                className={`text-xl text-slate-400 transition-colors ${social.colorClass}`}
+                className={`text-xl text-slate-500 transition-colors ${social.colorClass}`}
               >
                 {social.icon}
               </a>
             ))}
           </div>
+        </div>
+        
+        {/* Bottom Section: Copyright */}
+        <div className="text-center text-xs text-slate-500">
+          <p>&copy; {currentYear} GroceryStore. All rights reserved.</p>
         </div>
       </div>
     </footer>

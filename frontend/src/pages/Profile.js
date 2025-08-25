@@ -124,7 +124,6 @@ const Profile = () => {
                             value={userData.name}
                             name='name'
                             onChange={handleOnChange}
-                            required
                         />
                     </div>
 
