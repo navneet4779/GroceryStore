@@ -108,30 +108,34 @@ const GlobalProvider = ({children}) => {
 
     const fetchAddress = async()=>{
         try {
-          const response = await Axios({
-            ...SummaryApi.getAddress
-          })
-          const { data : responseData } = response
-  
+          if(localStorage.getItem("userId")){
+            const response = await Axios({
+              ...SummaryApi.getAddress
+            })
+            const { data : responseData } = response
+
           if(responseData.success){
             dispatch(handleAddAddress(responseData.data))
           }
+        }
         } catch (error) {
-            // AxiosToastError(error)
+          console.log(error)
         }
       }
 
       const fetchOrder = async()=>{
         try {
-          const response = await Axios({
-            ...SummaryApi.getOrderItems,
-          })
-          const { data : responseData } = response
-  
+          if(localStorage.getItem("userId")){
+            const response = await Axios({
+              ...SummaryApi.getOrderItems,
+            })
+            const { data : responseData } = response
+
           if(responseData.success){
               dispatch(setOrder(responseData.data))
           }
-        } catch (error) {
+        } 
+      }catch (error) {
           console.log(error)
         }
       }

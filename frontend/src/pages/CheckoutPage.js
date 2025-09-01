@@ -249,7 +249,7 @@ const CheckoutPage = () => {
     const cartItemsList = useSelector(state => state.cartItem.cart);
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('online');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
     const [isProcessingUpi, setIsProcessingUpi] = useState(false);
     const [stripeCustomerId, setStripeCustomerId] = useState(null);
     const [savedPaymentMethods, setSavedPaymentMethods] = useState([]);

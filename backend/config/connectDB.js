@@ -1,26 +1,23 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-// Create a Sequelize instance
-const sequelize = new Sequelize(
-    process.env.MYSQL_DATABASE, // Database name
-    process.env.MYSQL_USER,     // Username
-    process.env.MYSQL_PASSWORD, // Password
-    {
-        host: process.env.MYSQL_HOST, // Hostname
-        dialect: 'mysql',             // Database dialect
-        logging: false,               // Disable logging (optional)
-    }
-);
+const { MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST } = process.env;
 
-// Function to connect to the database
+// Create a Sequelize instance using a single configuration object for clarity
+const sequelize = new Sequelize(MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, {
+    host: MYSQL_HOST,
+    dialect: 'mysql',
+    logging: false,
+});
+
 async function connectDB() {
     try {
         await sequelize.authenticate();
-        console.log("Connected to MySQL Database using Sequelize");
+        console.log("Connected to MySQL database using Sequelize.");
     } catch (error) {
-        console.error("Unable to connect to the database:", error);
+        console.error("Error connecting to the database:", error.message);
         process.exit(1);
     }
 }

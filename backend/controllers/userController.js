@@ -114,8 +114,8 @@ export async function verifyOtpController(request, response) {
         user.status = "Active"; // Set user status to Active
         await user.save();
 
-        const accessToken = await generatedAccessToken(user.id); // Use `id` for MySQL
-        const refreshToken = await generatedRefreshToken(user.id); // Use `id` for MySQL
+        const accessToken =  generatedAccessToken(user.id); // Use `id` for MySQL
+        const refreshToken = generatedRefreshToken(user.id); // Use `id` for MySQL
 
         CartProduct.update(
             { userId: user.id }, // Set the userId for the cart items
@@ -294,9 +294,9 @@ export async function refreshToken(request,response){
             })
         }
 
-        const userId = verifyToken?._id
+        const userId = verifyToken?.id
 
-        const newAccessToken = await generatedAccessToken(userId)
+        const newAccessToken =  generatedAccessToken(userId)
 
         const cookiesOption = {
             httpOnly : true,

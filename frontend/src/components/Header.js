@@ -31,6 +31,11 @@ const Header = () => {
     const cartItem = useSelector((state) => state.cartItem.cart);
     const { totalPrice, totalQty } = useGlobalContext();
 
+    if (!user) {
+        localStorage.clear();
+        navigate('/');
+    }
+
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
