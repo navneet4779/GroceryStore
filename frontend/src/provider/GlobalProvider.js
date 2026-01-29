@@ -20,13 +20,11 @@ const GlobalProvider = ({children}) => {
     const [totalQty,setTotalQty] = useState(0)
     const [totalPrice,setTotalPrice] = useState(0)
     const [notDiscountTotalPrice,setNotDiscountTotalPrice] = useState(0)
+    const getUserId = () => localStorage.getItem("userId")
     
     const fetchCartItem = async()=>{
         try {
-          let userId = null;
-          if (localStorage.getItem("userId")) {
-            userId = localStorage.getItem("userId");
-          }
+          const userId = getUserId()
           const response = await Axios({
             ...SummaryApi.getCartItem,
             data : {
@@ -85,30 +83,30 @@ const GlobalProvider = ({children}) => {
     }
 
     useEffect(()=>{
-        const qty = cartItem.reduce((preve,curr)=>{
-            return preve + curr.quantity
-        },0)
-        setTotalQty(qty)
+        const totals = cartItem.reduce((preve, curr) => {
+          const price = curr?.product?.price || 0;
+          const discount = curr?.product?.discount || 0;
+          const priceAfterDiscount = pricewithDiscount(price, discount);
 
-        const tPrice = cartItem.reduce((preve, curr) => {
-            const price = curr?.product?.price || 0;
-            const discount = curr?.product?.discount || 0;
-            const priceAfterDiscount = pricewithDiscount(price, discount);
+          preve.totalQty += curr.quantity
+          preve.totalPrice += priceAfterDiscount * curr.quantity
+          preve.notDiscountTotalPrice += curr?.product?.price * curr.quantity
+          return preve
+        }, {
+          totalQty: 0,
+          totalPrice: 0,
+          notDiscountTotalPrice: 0
+        })
 
-            return preve + (priceAfterDiscount * curr.quantity);
-        }, 0);
-        setTotalPrice(tPrice);
-
-        const notDiscountPrice = cartItem.reduce((preve,curr)=>{
-            return preve + (curr?.product?.price * curr.quantity)
-          },0)
-          setNotDiscountTotalPrice(notDiscountPrice)
+        setTotalQty(totals.totalQty)
+        setTotalPrice(totals.totalPrice)
+        setNotDiscountTotalPrice(totals.notDiscountTotalPrice)
     },[cartItem])
 
 
     const fetchAddress = async()=>{
         try {
-          if(localStorage.getItem("userId")){
+          if(getUserId()){
             const response = await Axios({
               ...SummaryApi.getAddress
             })
@@ -125,7 +123,7 @@ const GlobalProvider = ({children}) => {
 
       const fetchOrder = async()=>{
         try {
-          if(localStorage.getItem("userId")){
+          if(getUserId()){
             const response = await Axios({
               ...SummaryApi.getOrderItems,
             })

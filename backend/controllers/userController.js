@@ -1,10 +1,17 @@
 import UserModel from '../models/userModel.js'
 import CartProduct  from "../models/cartproductModel.js";
 import bcryptjs from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import generatedAccessToken from '../utils/generatedAccessToken.js'
 import generatedRefreshToken from '../utils/generatedRefreshToken.js'
 import sendEmail from '../config/sendEmail.js'
 import loginOtpTemplate from '../utils/loginOtpTemplate.js'
+
+const cookiesOption = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+};
 
 export async function sendOtpController(request, response) {    
     try {
@@ -122,11 +129,6 @@ export async function verifyOtpController(request, response) {
             { where: { userId: null } } // Clear the user's cart
         );
 
-        const cookiesOption = {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-        };
         response.cookie("accessToken", accessToken, cookiesOption);
         response.cookie("refreshToken", refreshToken, cookiesOption);
 
@@ -189,12 +191,6 @@ export async function userDetails(request, response) {
 export async function logoutController(request,response){
     try {
         const userId = request.userId //middleware
-
-        const cookiesOption = {
-            httpOnly : true,
-            secure : true,
-            sameSite : "None"
-        }
 
         response.clearCookie("accessToken",cookiesOption)
         response.clearCookie("refreshToken",cookiesOption)
@@ -297,12 +293,6 @@ export async function refreshToken(request,response){
         const userId = verifyToken?.id
 
         const newAccessToken =  generatedAccessToken(userId)
-
-        const cookiesOption = {
-            httpOnly : true,
-            secure : true,
-            sameSite : "None"
-        }
 
         response.cookie('accessToken',newAccessToken,cookiesOption)
 

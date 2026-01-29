@@ -17,9 +17,6 @@ const ProductListPage = () => {
   const AllSubCategory = useSelector(state => state.product.allSubCategory)
   const [DisplaySubCatory, setDisplaySubCategory] = useState([])
 
-  const subCategory = params?.subCategory?.split("-")
-  const subCategoryName = subCategory?.slice(0, subCategory?.length - 1)?.join(" ")
-
   const categoryId = params.category.split("-").slice(-1)[0]
   const categoryName = params.category.split("-").slice(0, -1).join(" ")
   const subCategoryId = params.subCategory.split("-").slice(-1)[0]
@@ -40,11 +37,11 @@ const ProductListPage = () => {
       const { data: responseData } = response
 
       if (responseData.success) {
-        if (responseData.page === 1) {
-          setData(responseData.data)
-        } else {
-          setData([...data, ...responseData.data])
-        }
+        setData((prevData) => (
+          responseData.page === 1
+            ? responseData.data
+            : [...prevData, ...responseData.data]
+        ))
         setTotalPage(responseData.totalCount)
       }
     } catch (error) {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import banner from '../assets/banner.jpg';
 import bannerMobile from '../assets/banner-mobile.jpg';
 import { useSelector } from 'react-redux';
@@ -6,6 +6,27 @@ import { valideURLConvert } from '../utils/valideURLConvert';
 import { useNavigate } from 'react-router-dom';
 import CategoryWiseProductDisplay from '../components/CategoryWiseProductDisplay';
 import { motion } from 'framer-motion'; // Import for animations
+
+const bannerVariants = {
+  initial: { opacity: 0, y: -20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const categoryTitleVariants = {
+  initial: { opacity: 0, x: -20 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.4, delay: 0.2 } },
+};
+
+const subCategoryItemVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  hover: { scale: 1.05, transition: { duration: 0.2 } },
+};
+
+const loadingItemVariants = {
+  initial: { opacity: 0.5 },
+  animate: { opacity: 1, transition: { duration: 0.8, yoyo: Infinity } },
+};
 
 const Home = () => {
   const loadingCategory = useSelector((state) => state.product.loadingCategory);
@@ -18,26 +39,20 @@ const Home = () => {
     navigate(url);
   };
 
-  const bannerVariants = {
-    initial: { opacity: 0, y: -20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  };
-
-  const categoryTitleVariants = {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.4, delay: 0.2 } },
-  };
-
-  const subCategoryItemVariants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
-  };
-
-  const loadingItemVariants = {
-    initial: { opacity: 0.5 },
-    animate: { opacity: 1, transition: { duration: 0.8, yoyo: Infinity } },
-  };
+  const subCategoriesByCategoryId = useMemo(() => {
+    const grouped = new Map();
+    subCategoryData.forEach((subCategory) => {
+      const categoryId = subCategory.category?.id;
+      if (!categoryId) {
+        return;
+      }
+      if (!grouped.has(categoryId)) {
+        grouped.set(categoryId, []);
+      }
+      grouped.get(categoryId).push(subCategory);
+    });
+    return grouped;
+  }, [subCategoryData]);
 
   return (
     <motion.section
@@ -96,9 +111,7 @@ const Home = () => {
               </motion.h2>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6"> {/* Increased gap */}
                 {/* Subcategories */}
-                {subCategoryData
-                  .filter((sub) => sub.category?.id === category.id)
-                  .map((subCategory) => (
+              {(subCategoriesByCategoryId.get(category.id) || []).map((subCategory) => (
                     <motion.div
                       key={subCategory.id + 'subcategory'}
                       className="bg-white rounded-lg shadow-md cursor-pointer hover:shadow-lg transition duration-300" // Added rounded-lg, shadow, and transition

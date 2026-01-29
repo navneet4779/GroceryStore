@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IoSearch } from 'react-icons/io5';
 import { FaArrowLeft } from 'react-icons/fa';
 import { MdClear } from 'react-icons/md'; // Icon for clear button
@@ -20,20 +20,17 @@ const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isSearchPage, setIsSearchPage] = useState(false);
+  const isSearchPage = location.pathname === '/search';
   // State for the input value on the search page
   const [currentQuery, setCurrentQuery] = useState('');
 
   // Determine if on /search page and get initial query
   useEffect(() => {
-    const onSearchRoute = location.pathname === '/search';
-    setIsSearchPage(onSearchRoute);
-
-    if (onSearchRoute) {
+    if (isSearchPage) {
       const queryParams = new URLSearchParams(location.search);
       setCurrentQuery(queryParams.get('q') || '');
     }
-  }, [location]);
+  }, [isSearchPage, location.search]);
 
   const redirectToSearchPage = () => {
     navigate('/search');

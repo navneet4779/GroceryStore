@@ -43,11 +43,11 @@ const AddFieldComponent = ({ value, onChange, submit, close, fieldNameLabel = "F
 
 const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
   const [data, setData] = useState({
-    _id : propsData._id,
+    id : propsData.id || propsData._id,
     name: propsData.name,
-    image: propsData.image,
-    category: propsData.category,
-    subCategory: propsData.subCategory,
+    image: Array.isArray(propsData.image) ? propsData.image : (propsData.image ? [propsData.image] : []),
+    category: propsData.category ? [propsData.category] : [],
+    subCategory: propsData.subCategory ? [propsData.subCategory] : [],
     unit: propsData.unit,
     stock: propsData.stock,
     price: propsData.price,
@@ -143,9 +143,15 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
     console.log("data", data)
 
     try {
+      const payload = {
+        ...data,
+        id: data.id,
+        category: data.category.map((c) => c.id || c._id),
+        subCategory: data.subCategory.map((c) => c.id || c._id)
+      }
       const response = await Axios({
         ...SummaryApi.updateProductDetails,
-        data: data
+        data: payload
       })
       const { data: responseData } = response
 
@@ -269,7 +275,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
                     value={selectCategory}
                     onChange={(e) => {
                       const value = e.target.value
-                      const category = allCategory.find(el => el._id === value)
+                      const category = allCategory.find(el => String(el.id) === value)
 
                       setData((preve) => {
                         return {
@@ -284,7 +290,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
                     {
                       allCategory.map((c, index) => {
                         return (
-                          <option value={c?._id}>{c.name}</option>
+                          <option value={c?.id}>{c.name}</option>
                         )
                       })
                     }
@@ -293,7 +299,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
                     {
                       data.category.map((c, index) => {
                         return (
-                          <div key={c._id + index + "productsection"} className='text-sm flex items-center gap-1 bg-blue-50 mt-2'>
+                          <div key={c.id + index + "productsection"} className='text-sm flex items-center gap-1 bg-blue-50 mt-2'>
                             <p>{c.name}</p>
                             <div className='hover:text-red-500 cursor-pointer' onClick={() => handleRemoveCategory(index)}>
                               <IoClose size={20} />
@@ -313,7 +319,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
                     value={selectSubCategory}
                     onChange={(e) => {
                       const value = e.target.value
-                      const subCategory = allSubCategory.find(el => el._id === value)
+                      const subCategory = allSubCategory.find(el => String(el.id) === value)
 
                       setData((preve) => {
                         return {
@@ -328,7 +334,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
                     {
                       allSubCategory.map((c, index) => {
                         return (
-                          <option value={c?._id}>{c.name}</option>
+                          <option value={c?.id}>{c.name}</option>
                         )
                       })
                     }
@@ -337,7 +343,7 @@ const EditProductAdmin = ({ close ,data : propsData,fetchProductData}) => {
                     {
                       data.subCategory.map((c, index) => {
                         return (
-                          <div key={c._id + index + "productsection"} className='text-sm flex items-center gap-1 bg-blue-50 mt-2'>
+                          <div key={c.id + index + "productsection"} className='text-sm flex items-center gap-1 bg-blue-50 mt-2'>
                             <p>{c.name}</p>
                             <div className='hover:text-red-500 cursor-pointer' onClick={() => handleRemoveSubCategory(index)}>
                               <IoClose size={20} />

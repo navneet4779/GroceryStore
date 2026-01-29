@@ -13,6 +13,8 @@ import Axios from './utils/Axios';
 import SummaryApi from './common/SummaryApi';
 import GlobalProvider  from './provider/GlobalProvider';
 
+const sortByName = (a, b) => a.name.localeCompare(b.name)
+
 function App() {
   const dispatch = useDispatch()
   const fetchUser = async()=>{
@@ -31,7 +33,7 @@ function App() {
         const { data : responseData } = response
 
         if(responseData.success){
-           dispatch(setAllCategory(responseData.data.sort((a, b) => a.name.localeCompare(b.name)))) 
+           dispatch(setAllCategory(responseData.data.sort(sortByName))) 
         }
     } catch (error) {
         
@@ -48,7 +50,7 @@ function App() {
         const { data : responseData } = response
 
         if(responseData.success){
-           dispatch(setAllSubCategory(responseData.data.sort((a, b) => a.name.localeCompare(b.name)))) 
+           dispatch(setAllSubCategory(responseData.data.sort(sortByName))) 
         }
     } catch (error) {
         
@@ -57,11 +59,8 @@ function App() {
   }
 
   useEffect(() => {
-    // Call both functions sequentially
     const fetchData = async () => {
-      await fetchUser();
-      await fetchCategory();
-      await fetchSubCategory();
+      await Promise.all([fetchUser(), fetchCategory(), fetchSubCategory()]);
     };
 
     fetchData();

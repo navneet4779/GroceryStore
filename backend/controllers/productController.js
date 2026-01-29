@@ -315,3 +315,130 @@ export const createProductController = async(request,response)=>{
         })
     }
 }
+
+const normalizeIdArray = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => (typeof item === "object" ? item.id || item._id : item))
+            .filter(Boolean);
+    }
+    return [typeof value === "object" ? value.id || value._id : value].filter(Boolean);
+};
+
+export const updateProductController = async (request, response) => {
+    try {
+        const productId = request.body.id || request.body._id;
+
+        if (!productId) {
+            return response.status(400).json({
+                message: "Product id is required",
+                error: true,
+                success: false,
+            });
+        }
+
+        const {
+            name,
+            image,
+            category,
+            subCategory,
+            categoryId,
+            subCategoryId,
+            unit,
+            stock,
+            price,
+            discount,
+            description,
+            more_details,
+            publish,
+        } = request.body;
+
+        const normalizedCategoryId = categoryId || normalizeIdArray(category)[0];
+        const normalizedSubCategoryId = subCategoryId || normalizeIdArray(subCategory)[0];
+
+        const updateFields = {
+            ...(name !== undefined && { name }),
+            ...(image !== undefined && { image }),
+            ...(unit !== undefined && { unit }),
+            ...(stock !== undefined && { stock }),
+            ...(price !== undefined && { price }),
+            ...(discount !== undefined && { discount }),
+            ...(description !== undefined && { description }),
+            ...(more_details !== undefined && { more_details }),
+            ...(publish !== undefined && { publish }),
+            ...(normalizedCategoryId !== undefined && { categoryId: normalizedCategoryId }),
+            ...(normalizedSubCategoryId !== undefined && { subCategoryId: normalizedSubCategoryId }),
+        };
+
+        const [updatedCount] = await ProductModel.update(updateFields, {
+            where: { id: productId },
+        });
+
+        if (updatedCount === 0) {
+            return response.status(404).json({
+                message: "Product not found",
+                error: true,
+                success: false,
+            });
+        }
+
+        const updatedProduct = await ProductModel.findByPk(productId, {
+            include: [
+                { model: CategoryModel, as: "category" },
+                { model: SubCategoryModel, as: "subCategory" },
+            ],
+        });
+
+        return response.json({
+            message: "Product updated successfully",
+            data: updatedProduct,
+            success: true,
+            error: false,
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false,
+        });
+    }
+};
+
+export const deleteProductController = async (request, response) => {
+    try {
+        const productId = request.body.id || request.body._id;
+
+        if (!productId) {
+            return response.status(400).json({
+                message: "Product id is required",
+                error: true,
+                success: false,
+            });
+        }
+
+        const deletedCount = await ProductModel.destroy({
+            where: { id: productId },
+        });
+
+        if (!deletedCount) {
+            return response.status(404).json({
+                message: "Product not found",
+                error: true,
+                success: false,
+            });
+        }
+
+        return response.json({
+            message: "Product deleted successfully",
+            success: true,
+            error: false,
+        });
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false,
+        });
+    }
+};

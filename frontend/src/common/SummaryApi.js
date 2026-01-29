@@ -74,7 +74,7 @@ const SummaryApi = {
         method : 'post'
     },
     refreshToken : {
-        url : 'api/user/refresh-token',
+        url : '/api/user/refresh-token',
         method : 'post'
     },
     deleteCartItem : {
@@ -125,9 +125,25 @@ const SummaryApi = {
         url : '/api/category/add-category',
         method : 'post'
     },
+    updateCategory : {
+        url : '/api/category/update',
+        method : 'put'
+    },
+    deleteCategory : {
+        url : '/api/category/delete',
+        method : 'delete'
+    },
     createSubCategory : {
         url : '/api/subcategory/create',
         method : 'post'
+    },
+    updateSubCategory : {
+        url : '/api/subcategory/update',
+        method : 'put'
+    },
+    deleteSubCategory : {
+        url : '/api/subcategory/delete',
+        method : 'delete'
     },
     getProduct : {
         url : '/api/product/get',
@@ -136,6 +152,14 @@ const SummaryApi = {
     createProduct : {
         url : '/api/product/create',
         method : 'post'
+    },
+    updateProductDetails : {
+        url : '/api/product/update',
+        method : 'put'
+    },
+    deleteProduct : {
+        url : '/api/product/delete',
+        method : 'delete'
     },
 
 

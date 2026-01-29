@@ -16,6 +16,15 @@ import { DisplayPriceInRupees } from "../utils/DisplayPriceInRupees";
 import { useGlobalContext } from "../provider/GlobalProvider";
 import LoginPopup from "../pages/LoginPopup";
 
+const userMenuVariants = {
+    open: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
+    closed: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.1, ease: "easeIn" } },
+};
+
+const cartModalVariants = {
+    open: { opacity: 1, x: 0, transition: { duration: 0.3, ease: "easeOut" } },
+    closed: { opacity: 0, x: "100%", transition: { duration: 0.2, ease: "easeIn" } },
+};
 
 // --- Header Component ---
 // The main Header component now includes state to manage the login popup.
@@ -31,10 +40,12 @@ const Header = () => {
     const cartItem = useSelector((state) => state.cartItem.cart);
     const { totalPrice, totalQty } = useGlobalContext();
 
-    if (!user) {
-        localStorage.clear();
-        navigate('/');
-    }
+    useEffect(() => {
+        if (!user) {
+            localStorage.clear();
+            navigate('/');
+        }
+    }, [user, navigate]);
 
     useEffect(() => {
         if ("geolocation" in navigator) {
@@ -65,17 +76,6 @@ const Header = () => {
         }
     };
     
-    // Animation variants
-    const userMenuVariants = {
-        open: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
-        closed: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.1, ease: "easeIn" } },
-    };
-
-    const cartModalVariants = {
-        open: { opacity: 1, x: 0, transition: { duration: 0.3, ease: "easeOut" } },
-        closed: { opacity: 0, x: "100%", transition: { duration: 0.2, ease: "easeIn" } },
-    };
-
     return (
         <>
             <motion.header
