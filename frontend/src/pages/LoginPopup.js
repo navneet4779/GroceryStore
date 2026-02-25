@@ -168,7 +168,7 @@ const LoginPopup = ({ onClose }) => {
           {/* OTP input under email */}
           {otpSent && (
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Enter OTP</label>
+              <label className="text-sm font-medium">Enter One Time Password</label>
               <div
                 className="flex justify-center gap-2"
                 onPaste={handlePaste}
