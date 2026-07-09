@@ -6,6 +6,11 @@ const Axios = axios.create({
     withCredentials : true
 })
 
+const axiosForRefreshToken = axios.create({
+    baseURL : baseURL,
+    withCredentials : true
+})
+
 //sending access token in the header
 Axios.interceptors.request.use(
     async(config)=>{
@@ -32,18 +37,15 @@ Axios.interceptors.response.use(
         const originRequest = error.config
         const status = error.response?.status
 
-        if(status === 401 && originRequest && !originRequest.retry){
+        if(status === 401 && originRequest && !originRequest.retry && originRequest.url !== SummaryApi.refreshToken.url){
             originRequest.retry = true
 
             const refreshToken = localStorage.getItem("refreshToken")
+            const newAccessToken = await refreshAccessToken(refreshToken)
 
-            if(refreshToken){
-                const newAccessToken = await refreshAccessToken(refreshToken)
-
-                if(newAccessToken){
-                    originRequest.headers.Authorization = `Bearer ${newAccessToken}`
-                    return Axios(originRequest)
-                }
+            if(newAccessToken){
+                originRequest.headers.Authorization = `Bearer ${newAccessToken}`
+                return Axios(originRequest)
             }
         }
         
@@ -54,11 +56,11 @@ Axios.interceptors.response.use(
 
 const refreshAccessToken = async(refreshToken)=>{
     try {
-        const response = await Axios({
+        const response = await axiosForRefreshToken({
             ...SummaryApi.refreshToken,
-            headers : {
+            headers : refreshToken ? {
                 Authorization : `Bearer ${refreshToken}`
-            }
+            } : {}
         })
 
         const accessToken = response.data.data.accessToken

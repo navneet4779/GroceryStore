@@ -90,6 +90,8 @@ const LoginPopup = ({ onClose }) => {
         if (res.data.success) {
           toast.success("Login successful!");
           localStorage.setItem("userId", String(res.data.userID));
+          localStorage.setItem("accesstoken", res.data.token.accessToken);
+          localStorage.setItem("refreshToken", res.data.token.refreshToken);
           const userDetails = await fetchUserDetails();
           if (userDetails?.data) dispatch(setUserDetails(userDetails.data));
           onClose();

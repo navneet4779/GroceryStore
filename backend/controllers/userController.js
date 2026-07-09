@@ -122,7 +122,7 @@ export async function verifyOtpController(request, response) {
         await user.save();
 
         const accessToken =  generatedAccessToken(user.id); // Use `id` for MySQL
-        const refreshToken = generatedRefreshToken(user.id); // Use `id` for MySQL
+        const refreshToken = await generatedRefreshToken(user.id); // Use `id` for MySQL
 
         CartProduct.update(
             { userId: user.id }, // Set the userId for the cart items
@@ -270,7 +270,7 @@ export async function updateUserDetails(request,response){
 
 export async function refreshToken(request,response){
     try {
-        const refreshToken = request.cookies.refreshToken || request?.headers?.authorization?.split(" ")[1]  /// [ Bearer token]
+        const refreshToken = request.cookies?.refreshToken || request?.headers?.authorization?.split(" ")[1]  /// [ Bearer token]
 
         if(!refreshToken){
             return response.status(401).json({
@@ -280,7 +280,7 @@ export async function refreshToken(request,response){
             })
         }
 
-        const verifyToken = await jwt.verify(refreshToken,process.env.SECRET_KEY_REFRESH_TOKEN)
+        const verifyToken = jwt.verify(refreshToken,process.env.SECRET_KEY_REFRESH_TOKEN)
 
         if(!verifyToken){
             return response.status(401).json({
@@ -307,8 +307,10 @@ export async function refreshToken(request,response){
 
 
     } catch (error) {
-        return response.status(500).json({
-            message : error.message || error,
+        const isJwtError = error.name === "TokenExpiredError" || error.name === "JsonWebTokenError";
+
+        return response.status(isJwtError ? 401 : 500).json({
+            message : isJwtError ? "Refresh token is invalid or expired" : error.message || error,
             error : true,
             success : false
         })

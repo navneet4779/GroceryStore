@@ -32,12 +32,15 @@ const auth = (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error("Auth Middleware Error:", error);
+        const isJwtError = error.name === "TokenExpiredError" || error.name === "JsonWebTokenError";
 
-        const statusCode = error.name === "TokenExpiredError" ? 401 : 500;
-        return res.status(statusCode).json({
-            message: error.name === "TokenExpiredError" 
-                ? "Token expired, please log in again" 
+        if (!isJwtError) {
+            console.error("Auth Middleware Error:", error);
+        }
+
+        return res.status(isJwtError ? 401 : 500).json({
+            message: error.name === "TokenExpiredError"
+                ? "Access token expired"
                 : "Unauthorized access",
             error: true,
             success: false,
